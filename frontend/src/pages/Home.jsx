@@ -16,7 +16,7 @@ import logoEmpresa from '../assets/logo-pyn.png';
 // Nuevos módulos para la empresa P&P
 const modulos = [
   { id: 1, titulo: "Gestión de Proyectos", icon: <ClipboardCheck size={42} />, link: "/proyectos" },
-  { id: 2, titulo: "Recursos Humanos (RRHH)", icon: <Users size={42} />, link: "/rrhh" },
+  { id: 2, titulo: "Recursos Humanos (RRHH)", icon: <Users size={42} />, link: "/rrhh/login" },
   { id: 3, titulo: "Control de Asistencia", icon: <Clock size={42} />, link: "/asistencia" },
   { id: 4, titulo: "Gestión de Mantenimiento", icon: <Wrench size={42} />, link: "/mantenimiento" },
 ];

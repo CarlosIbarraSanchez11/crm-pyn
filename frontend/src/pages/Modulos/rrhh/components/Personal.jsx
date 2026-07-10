@@ -1,4 +1,4 @@
-import { Search, Plus, Edit, Eye, Users, UserCheck, UserX, Building2 } from "lucide-react";
+import { Search, Plus, Edit, Eye, Users, Trash2,UserCheck, UserX, Building2 } from "lucide-react";
 import { useState } from "react";
 import empleadosData from "../../../../data/empleados";
 import ModalNuevoEmpleado from "./Modal/ModalNuevoEmpleado";
@@ -8,9 +8,31 @@ const COLORS = { navy:"rgb(23 37 76)", orange:"rgb(243 146 0)" };
 export default function Personal(){
 
 const [modal,setModal]=useState(false);
-
 const [empleados]=useState(empleadosData);
+const [busqueda, setBusqueda] = useState("");
+const [cargo, setCargo] = useState("");
+const [empresa, setEmpresa] = useState("");
+const empleadosFiltrados = empleados.filter(emp => {
 
+  const coincideBusqueda =
+    `${emp.nombres} ${emp.apellidos}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase()) ||
+    emp.dni.includes(busqueda);
+
+  const coincideCargo =
+    cargo === "" || emp.cargo === cargo;
+
+  const coincideEmpresa =
+    empresa === "" || emp.empresa === empresa;
+
+  return (
+    coincideBusqueda &&
+    coincideCargo &&
+    coincideEmpresa
+  );
+
+});
 return(
 <div className="p-6 bg-slate-50 min-h-screen">
 
@@ -42,24 +64,43 @@ return(
 
 <div className="flex items-center border rounded-xl px-4 flex-1 bg-slate-50">
 <Search size={18} className="text-slate-400"/>
-<input className="bg-transparent outline-none w-full p-3 text-sm" placeholder="Buscar empleado por nombre, apellido o DNI..."/>
-</div>
+<input
+  value={busqueda}
+  onChange={(e) => setBusqueda(e.target.value)}
+  className="bg-transparent outline-none w-full p-3 text-sm"
+  placeholder="Buscar empleado por nombre, apellido o DNI..."
+/></div>
 
-<select className="border rounded-xl px-4 py-3 text-sm outline-none">
-<option>Todos los cargos</option>
-<option>Asistente Administrativa</option>
+<select
+  value={cargo}
+  onChange={(e) => setCargo(e.target.value)}
+  className="border rounded-xl px-4 py-3 text-sm outline-none"
+>
+  <option value="">Todos los cargos</option>
+
+  {[...new Set(empleadosData.map(e => e.cargo))].map(c => (
+    <option key={c} value={c}>
+      {c}
+    </option>
+  ))}
 </select>
 
-<select className="border rounded-xl px-4 py-3 text-sm outline-none">
-<option>Todas las empresas</option>
-<option>F85</option>
+<select
+  value={empresa}
+  onChange={(e) => setEmpresa(e.target.value)}
+  className="border rounded-xl px-4 py-3 text-sm outline-none"
+>
+  <option value="">Todas las empresas</option>
+
+  {[...new Set(empleadosData.map(e => e.empresa))].map(emp => (
+    <option key={emp} value={emp}>
+      {emp}
+    </option>
+  ))}
 </select>
 
 </div>
-
 </div>
-
-
 
 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 <div className="overflow-x-auto">
@@ -84,8 +125,7 @@ w-full">
 <tbody>
 
 {
-empleados.map(emp=>(
-
+  empleadosFiltrados.map(emp => (
 <tr key={emp.id} className="border-b hover:bg-slate-50 transition">
 
 
@@ -125,17 +165,44 @@ empleados.map(emp=>(
 </span>
 </td>
 
+<td className="p-4">
+  <div className="flex justify-center gap-3">
 
-<td className="p-4 flex justify-center gap-3">
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-orange-50
+      text-orange-600
+      flex
+      items-center
+      justify-center
+      hover:bg-orange-100
+      transition
+      "
+    >
+      <Edit size={17}/>
+    </button>
 
-<button className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100">
-<Eye size={17}/>
-</button>
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-red-50
+      text-red-600
+      flex
+      items-center
+      justify-center
+      hover:bg-red-100
+      transition
+      "
+    >
+      <Trash2 size={17}/>
+    </button>
 
-<button className="h-9 w-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center hover:bg-orange-100">
-<Edit size={17}/>
-</button>
-
+  </div>
 </td>
 
 

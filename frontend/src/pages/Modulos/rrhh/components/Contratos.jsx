@@ -1,4 +1,4 @@
-import { Search, Plus, Edit, Eye, FileText, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Search, Plus, Edit, Eye,Trash2, FileText, CheckCircle, Clock, XCircle } from "lucide-react";
 import { useState } from "react";
 import ModalNuevoContrato from "./Modal/ModalNuevoContrato";
 import empleadosData from "../../../../data/empleados";
@@ -26,7 +26,34 @@ const [contratos] = useState(
    }
 
  })
-);return(
+);
+const [busqueda, setBusqueda] = useState("");
+const [tipoContrato, setTipoContrato] = useState("");
+const [estado, setEstado] = useState("");
+const contratosFiltrados = contratos.filter(contrato => {
+
+  const coincideBusqueda =
+    `${contrato.empleado.nombres} ${contrato.empleado.apellidos}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase()) ||
+    contrato.empleado.dni.includes(busqueda);
+
+  const coincideTipo =
+    tipoContrato === "" ||
+    contrato.tipo === tipoContrato;
+
+  const coincideEstado =
+    estado === "" ||
+    contrato.estado === estado;
+
+  return (
+    coincideBusqueda &&
+    coincideTipo &&
+    coincideEstado
+  );
+
+});
+return(
 
 <div className="p-6 bg-slate-50 min-h-screen">
 
@@ -106,48 +133,46 @@ valor="0"
 <div className="flex items-center border rounded-xl px-4 flex-1 bg-slate-50">
 
 <Search size={18} className="text-slate-400"/>
-
 <input
-className="bg-transparent outline-none w-full p-3 text-sm"
-placeholder="Buscar contrato por empleado o DNI..."
+  value={busqueda}
+  onChange={(e)=>setBusqueda(e.target.value)}
+  className="bg-transparent outline-none w-full p-3 text-sm"
+  placeholder="Buscar contrato por empleado o DNI..."
 />
 
 </div>
+<select
+  value={tipoContrato}
+  onChange={(e)=>setTipoContrato(e.target.value)}
+  className="border rounded-xl px-4 py-3 text-sm outline-none"
+>
+  <option value="">Todos los contratos</option>
 
-
-
-<select className="border rounded-xl px-4 py-3 text-sm outline-none">
-
-<option>
-Todos los contratos
-</option>
-
-<option>
-Plazo Fijo
-</option>
-
-<option>
-Indeterminado
-</option>
-
+  {[...new Set(contratos.map(c=>c.tipo))].map(tipo=>(
+    <option
+      key={tipo}
+      value={tipo}
+    >
+      {tipo}
+    </option>
+  ))}
 </select>
 
+<select
+  value={estado}
+  onChange={(e)=>setEstado(e.target.value)}
+  className="border rounded-xl px-4 py-3 text-sm outline-none"
+>
+  <option value="">Todos los estados</option>
 
-
-<select className="border rounded-xl px-4 py-3 text-sm outline-none">
-
-<option>
-Todos los estados
-</option>
-
-<option>
-Activo
-</option>
-
-<option>
-Finalizado
-</option>
-
+  {[...new Set(contratos.map(c=>c.estado))].map(est=>(
+    <option
+      key={est}
+      value={est}
+    >
+      {est}
+    </option>
+  ))}
 </select>
 
 </div>
@@ -217,8 +242,7 @@ Acciones
 
 
 {
-contratos.map(contrato=>(
-
+contratosFiltrados.map(contrato => (
 
 <tr
 key={contrato.id}
@@ -277,29 +301,17 @@ Vínculo laboral
 
 </td>
 
-
-
-
-
 <td className="p-4 text-sm">
 {contrato.fechaInicio}
 </td>
-
-
 
 <td className="p-4 text-sm">
 {contrato.fechaFin}
 </td>
 
-
-
-
 <td className="p-4 text-sm">
 {contrato.salario}
 </td>
-
-
-
 
 <td className="p-4">
 
@@ -309,32 +321,45 @@ Vínculo laboral
 
 </td>
 
+<td className="p-4">
+  <div className="flex justify-center gap-3">
 
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-orange-50
+      text-orange-600
+      flex
+      items-center
+      justify-center
+      hover:bg-orange-100
+      transition
+      "
+    >
+      <Edit size={17}/>
+    </button>
 
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-red-50
+      text-red-600
+      flex
+      items-center
+      justify-center
+      hover:bg-red-100
+      transition
+      "
+    >
+      <Trash2 size={17}/>
+    </button>
 
-
-<td className="p-4 flex justify-center gap-3">
-
-
-<button
-className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100"
->
-
-<Eye size={17}/>
-
-</button>
-
-
-
-<button
-className="h-9 w-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center hover:bg-orange-100"
->
-
-<Edit size={17}/>
-
-</button>
+  </div>
 </td>
-
 </tr>
 
 ))

@@ -1,4 +1,4 @@
-import { Search, Plus, Eye, Edit, GraduationCap, Users, CheckCircle, Clock } from "lucide-react";
+import { Search, Plus, Eye, Edit, Trash2,GraduationCap, Users, CheckCircle, Clock } from "lucide-react";
 import { useState } from "react";
 import ModalNuevoCapacitacion from "./Modal/ModalNuevoCapacitacion";
 import capacitacionesData from "../../../../data/capacitaciones";
@@ -22,6 +22,30 @@ cap.empleados
 }))
 
 );
+const [busqueda, setBusqueda] = useState("");
+const [estado, setEstado] = useState("");
+const capacitacionesFiltradas = capacitaciones.filter(cap => {
+
+  const coincideBusqueda =
+
+    cap.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
+
+    cap.empleados.some(emp =>
+      `${emp.nombres} ${emp.apellidos}`
+        .toLowerCase()
+        .includes(busqueda.toLowerCase())
+    );
+
+  const coincideEstado =
+    estado === "" ||
+    cap.estado === estado;
+
+  return (
+    coincideBusqueda &&
+    coincideEstado
+  );
+
+});
 return(
 <div className="p-6 bg-slate-50 min-h-screen">
 
@@ -53,7 +77,6 @@ Nueva capacitación
 </div>
 
 
-
 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
 
 
@@ -76,9 +99,6 @@ capacitaciones.reduce(
 
 </div>
 
-
-
-
 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
 
 
@@ -88,41 +108,34 @@ capacitaciones.reduce(
 <div className="flex items-center border rounded-xl px-4 flex-1 bg-slate-50">
 
 <Search size={18} className="text-slate-400"/>
-
 <input
-className="bg-transparent outline-none w-full p-3 text-sm"
-placeholder="Buscar por capacitación o empleado..."
+  value={busqueda}
+  onChange={(e)=>setBusqueda(e.target.value)}
+  className="bg-transparent outline-none w-full p-3 text-sm"
+  placeholder="Buscar por capacitación o empleado..."
 />
-
 </div>
 
+<select
+  value={estado}
+  onChange={(e)=>setEstado(e.target.value)}
+  className="border rounded-xl px-4 py-3 text-sm outline-none"
+>
+  <option value="">Todos los estados</option>
 
-
-<select className="border rounded-xl px-4 py-3 text-sm outline-none">
-
-<option>
-Todos los estados
-</option>
-
-<option>
-Programada
-</option>
-
-<option>
-Completada
-</option>
-
+  {[...new Set(capacitaciones.map(c => c.estado))].map(est => (
+    <option
+      key={est}
+      value={est}
+    >
+      {est}
+    </option>
+  ))}
 </select>
 
-
 </div>
 
-
 </div>
-
-
-
-
 
 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
@@ -167,16 +180,10 @@ Acciones
 </tr>
 
 </thead>
-
-
-
-
 <tbody>
 
-
 {
-capacitaciones.map(cap=>(
-
+capacitacionesFiltradas.map(cap => (
 
 <tr
 key={cap.id}
@@ -208,13 +215,9 @@ style={{backgroundColor:COLORS.navy}}
 
 </div>
 
-
 </div>
 
 </td>
-
-
-
 
 <td className="p-4">
 {
@@ -244,10 +247,6 @@ className="text-sm text-slate-700"
 
 </td>
 
-
-
-
-
 <td className="p-4">
 
 <span className="text-sm text-slate-700">
@@ -256,54 +255,59 @@ className="text-sm text-slate-700"
 
 </td>
 
-
-
-
-
 <td className="p-4 text-sm">
 
 {cap.institucion}
 
 </td>
 
-
-
-
-
 <td className="p-4">
-
-
 <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">
 
 {cap.estado}
 
 </span>
 
-
 </td>
 
+<td className="p-4">
+  <div className="flex justify-center gap-3">
+    
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-orange-50
+      text-orange-600
+      flex
+      items-center
+      justify-center
+      hover:bg-orange-100
+      transition
+      "
+    >
+      <Edit size={17}/>
+    </button>
 
+    <button
+      className="
+      h-9
+      w-9
+      rounded-lg
+      bg-red-50
+      text-red-600
+      flex
+      items-center
+      justify-center
+      hover:bg-red-100
+      transition
+      "
+    >
+      <Trash2 size={17}/>
+    </button>
 
-
-
-<td className="p-4 flex justify-center gap-3">
-
-
-<button className="h-9 w-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center hover:bg-blue-100">
-
-<Eye size={17}/>
-
-</button>
-
-
-
-<button className="h-9 w-9 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center hover:bg-orange-100">
-
-<Edit size={17}/>
-
-</button>
-
-
+  </div>
 </td>
 
 

@@ -28,55 +28,58 @@ const empleado = empleadosData.find(
 e=>e.id===item.empleadoId
 );
 
-
 return {
-
-
 id:item.id,
-
 dni:empleado.dni,
-
 apellidos:empleado.apellidos,
-
 nombres:empleado.nombres,
-
 cargo:empleado.cargo,
-
 departamento:empleado.departamento,
-
 empresa:empleado.empresa,
-
 estado:empleado.estado,
-
-
 emoInicio:item.emoInicio,
 emoFin:item.emoFin,
-
 alturaInicio:item.alturaInicio,
 alturaFin:item.alturaFin,
-
 sstInicio:item.sstInicio,
 sstFin:item.sstFin,
-
 patrimonialInicio:item.patrimonialInicio,
 patrimonialFin:item.patrimonialFin
 
-
 };
 
-
 });
 
+});
+const [busqueda, setBusqueda] = useState("");
+const [cargo, setCargo] = useState("");
+const [empresa, setEmpresa] = useState("");
+const trabajadoresFiltrados = trabajadores.filter(item => {
+
+  const coincideBusqueda =
+    `${item.nombres} ${item.apellidos}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase()) ||
+    item.dni.includes(busqueda);
+
+  const coincideCargo =
+    cargo === "" ||
+    item.cargo === cargo;
+
+  const coincideEmpresa =
+    empresa === "" ||
+    item.empresa === empresa;
+
+  return (
+    coincideBusqueda &&
+    coincideCargo &&
+    coincideEmpresa
+  );
 
 });
-
-
-
 return(
 
 <div className="p-6 bg-slate-50 min-h-screen">
-
-
 
 <div className="mb-8">
 
@@ -93,10 +96,6 @@ Seguridad, Salud Ocupacional y Medio Ambiente
 </p>
 
 </div>
-
-
-
-
 
 <div className="
 grid
@@ -134,14 +133,7 @@ titulo="Carnet SST"
 valor="0"
 />
 
-
 </div>
-
-
-
-
-
-
 
 <div className="
 bg-white
@@ -177,71 +169,80 @@ size={18}
 className="text-slate-400"
 />
 
-
 <input
-
-className="
-bg-transparent
-outline-none
-w-full
-p-3
-text-sm
-"
-
-placeholder="
-Buscar trabajador por nombre, apellido o DNI...
-"
-
+  value={busqueda}
+  onChange={(e)=>setBusqueda(e.target.value)}
+  className="
+  bg-transparent
+  outline-none
+  w-full
+  p-3
+  text-sm
+  "
+  placeholder="Buscar trabajador por nombre, apellido o DNI..."
 />
 
 </div>
 
+<select
+  value={cargo}
+  onChange={(e)=>setCargo(e.target.value)}
+  className="
+  border
+  rounded-xl
+  px-4
+  py-3
+  text-sm
+  outline-none
+  "
+>
 
+  <option value="">
+    Todos los cargos
+  </option>
 
-
-<select className="
-border
-rounded-xl
-px-4
-py-3
-text-sm
-outline-none
-">
-
-<option>
-Todos los cargos
-</option>
-
-</select>
-
-
-
-<select className="
-border
-rounded-xl
-px-4
-py-3
-text-sm
-outline-none
-">
-
-<option>
-Todas las empresas
-</option>
+  {[...new Set(trabajadores.map(t => t.cargo))].map(c => (
+    <option
+      key={c}
+      value={c}
+    >
+      {c}
+    </option>
+  ))}
 
 </select>
 
+<select
+  value={empresa}
+  onChange={(e)=>setEmpresa(e.target.value)}
+  className="
+  border
+  rounded-xl
+  px-4
+  py-3
+  text-sm
+  outline-none
+  "
+>
 
+  <option value="">
+    Todas las empresas
+  </option>
 
+  {[...new Set(trabajadores.map(t => t.empresa))].map(emp => (
+    <option
+      key={emp}
+      value={emp}
+    >
+      {emp}
+    </option>
+  ))}
+
+</select>
 </div>
 
 
 </div>
-
-
-
-
-
 
 
 <div className="
@@ -313,8 +314,7 @@ text-sm
 
 
 {
-trabajadores.map(item=>(
-
+trabajadoresFiltrados.map(item => (
 
 <tr
 key={item.id}
@@ -324,7 +324,6 @@ hover:bg-slate-50
 transition
 "
 >
-
 
 
 <td className="p-4">
@@ -351,8 +350,6 @@ style={{backgroundColor:COLORS.navy}}
 
 </div>
 
-
-
 <div>
 
 <p className="font-semibold text-slate-800">
@@ -370,18 +367,12 @@ style={{backgroundColor:COLORS.navy}}
 
 </div>
 
-
 </td>
-
-
 
 
 <td className="p-4 text-sm">
 {item.dni}
 </td>
-
-
-
 
 <td className="p-4">
 
@@ -395,15 +386,9 @@ style={{backgroundColor:COLORS.navy}}
 
 </td>
 
-
-
-
 <td className="p-4">
 {item.empresa}
 </td>
-
-
-
 
 <td className="p-4">
 
@@ -423,11 +408,7 @@ text-green-700
 
 </span>
 
-
 </td>
-
-
-
 
 <td className="p-4">{item.emoInicio}</td>
 <td className="p-4">{item.emoFin}</td>
@@ -441,32 +422,7 @@ text-green-700
 <td className="p-4">{item.patrimonialInicio}</td>
 <td className="p-4">{item.patrimonialFin}</td>
 
-
-
-
-
 <td className="p-4 flex gap-3">
-
-
-<button
-className="
-h-9
-w-9
-rounded-lg
-bg-blue-50
-text-blue-600
-flex
-items-center
-justify-center
-"
->
-
-<Eye size={17}/>
-
-</button>
-
-
-
 <button
 className="
 h-9
