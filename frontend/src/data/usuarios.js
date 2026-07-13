@@ -95,5 +95,18 @@ export const usuarios = [
         "Crear"
       ]
     }
+  },
+
+  {
+    id: 6,
+    nombre: "Gestor Proyectos",
+    correo: "proyectos@ips.com",
+    password: "123456",
+    modulo: "PROYECTOS", // 👈 Este es clave
+    rol: "Usuario",  
+     permisos: {
+      modulos: ["Resumen", "Proyectos", "Tareas", "Equipo", "Calendario"],
+      acciones: ["Crear", "Editar", "Eliminar"]
+    }
   }
 ];

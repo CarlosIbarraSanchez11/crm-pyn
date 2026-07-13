@@ -33,7 +33,11 @@ export default function ModuloLogin({
         return;
       }
 
-      if (usuario.modulo !== moduloKey.toUpperCase()) {
+      // 🚨 VALIDACIÓN CORREGIDA: Permitimos el acceso si es del módulo O si es ADMIN
+      if (
+        usuario.modulo !== moduloKey.toUpperCase() && 
+        usuario.modulo !== "ADMIN"
+      ) {
         setError("No tienes acceso a este módulo");
         return;
       }

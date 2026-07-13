@@ -22,3 +22,10 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Archivos de entorno (Seguridad)
+.env
+.env.*
+
+# Carpetas que no queremos volver a rastrear
+frontend2/
