@@ -1,12 +1,5 @@
-import { useState } from "react";
-import { usuarios } from "../../../../data/usuarios";
-const modulos = [
-  "Personal",
-  "Contratos",
-  "Calendario",
-  "Configuracion",
-  "Capacitaciones"
-];
+import { useEffect, useState } from "react";
+import api from "../../../../api/axios";
 const acciones = [
   "Crear",
   "Editar",
@@ -14,8 +7,54 @@ const acciones = [
 ];
 export default function GestionPermisos(){
 
+const [usuarios,setUsuarios]=useState([]);
 const [usuarioSeleccionado,setUsuarioSeleccionado]=useState(null);
+const [permisos,setPermisos]=useState([]);
+const [modulos,setModulos] = useState([]);
 
+useEffect(()=>{
+
+cargarUsuarios();
+cargarModulos();
+
+},[]);
+
+
+
+const cargarUsuarios = async()=>{
+
+try{
+
+const res =
+await api.get("/auth/usuarios");
+
+
+setUsuarios(res.data);
+
+
+}catch(error){
+
+console.log(error);
+
+}
+
+};
+const cargarModulos = async()=>{
+
+try{
+
+const res = await api.get("/auth/permisos");
+
+setModulos(res.data);
+
+
+}catch(error){
+
+console.log(error);
+
+}
+
+};
 return(
 
 <div className="p-6 bg-slate-50 min-h-screen">
@@ -62,22 +101,48 @@ Selecciona un usuario para configurar sus permisos
 {
 usuarios.map(usuario=>(
 
-
 <button
 key={usuario.id}
-onClick={() =>
-  setUsuarioSeleccionado(
-    JSON.parse(JSON.stringify(usuario))
-  )
-}className="
-w-full
-text-left
-border
-rounded-xl
-p-4
-mb-3
-hover:bg-slate-50
-"
+onClick={async()=>{
+
+const res = await api.get(
+`/auth/usuarios/${usuario.id}/permisos`
+);
+
+
+const ids = res.data.map(
+p=>p.permisoId
+);
+
+
+const permisosModulo={};
+
+
+res.data.forEach(p=>{
+
+permisosModulo[p.modulo]=true;
+
+});
+
+
+setUsuarioSeleccionado({
+
+...usuario,
+
+permisos:{
+
+modulos:permisosModulo,
+
+acciones:{},
+
+ids:ids
+
+}
+
+});
+
+
+}}
 >
 
 
@@ -175,22 +240,58 @@ duration-300
 "
 >
 
-<span>{modulo}</span>
+<span>{modulo.nombre}</span>
 <button
 type="button"
-onClick={() =>
+onClick={()=>{
+
+
+const existe =
+usuarioSeleccionado.permisos.ids.includes(
+modulo.id
+);
+
+
+let nuevosIds;
+
+
+if(existe){
+
+nuevosIds =
+usuarioSeleccionado.permisos.ids.filter(
+id=>id !== modulo.id
+);
+
+
+}else{
+
+
+nuevosIds=[
+...usuarioSeleccionado.permisos.ids,
+modulo.id
+];
+
+
+}
+
+
+
 setUsuarioSeleccionado({
+
 ...usuarioSeleccionado,
+
 permisos:{
+
 ...usuarioSeleccionado.permisos,
-modulos:{
-...usuarioSeleccionado.permisos.modulos,
-[modulo]:
-!usuarioSeleccionado.permisos.modulos[modulo]
+
+ids:nuevosIds
+
 }
-}
-})
-}
+
+});
+
+
+}}
 className={`
 relative
 w-12
@@ -199,7 +300,7 @@ rounded-full
 transition-all
 duration-300
 ${
-usuarioSeleccionado.permisos.modulos[modulo]
+usuarioSeleccionado.permisos.ids.includes(modulo.id)
 ? "bg-[rgb(23_37_76)]"
 : "bg-slate-300"
 }
@@ -217,7 +318,7 @@ bg-white
 shadow-md
 transition-all
 duration-300
-${usuarioSeleccionado.permisos.modulos[modulo]
+${usuarioSeleccionado.permisos.ids.includes(modulo.id)
 ? "left-6"
 : "left-1"}
 `}
@@ -323,20 +424,39 @@ ${usuarioSeleccionado.permisos.acciones[accion]
 </div>
 
 <button
+
+onClick={async()=>{
+
+await api.put(
+
+`/auth/usuarios/${usuarioSeleccionado.id}/permisos`,
+
+{
+permisos:
+usuarioSeleccionado.permisos.ids
+
+}
+
+);
+
+
+alert("Permisos guardados");
+
+
+}}
+
 className="
 mt-8
 w-full
 bg-orange-500
-hover:bg-orange-600
 text-white
-font-semibold
 rounded-xl
 py-3
 "
+
 >
 Guardar Permisos
 </button>
-
 </div>
 
 </div>

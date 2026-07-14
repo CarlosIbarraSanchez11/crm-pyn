@@ -6,11 +6,8 @@ import {
   ChevronLeft,
   ChevronRight
 } from "lucide-react";
-import empleadosData from "../../../../data/empleados";
-import capacitacionesData from "../../../../data/capacitaciones";
-import contratosData from "../../../../data/contratos";
-import { useState } from "react";
-
+import api from "../../../../api/axios";
+import { useState,useEffect } from "react";
 
 const COLORS = {
   navy:"rgb(23 37 76)",
@@ -38,77 +35,16 @@ console.log({
     nombreMes,
     diasMes
 });
-const [eventos]=useState(()=>{
-const cumpleaños = empleadosData.map(emp=>({
+const [eventos,setEventos]=useState([]);
+const obtenerEventos = async()=>{
 
-id:`cumple-${emp.id}`,
+    const res =
+        await api.get("/rrhh/calendario");
 
-tipo:"CUMPLEAÑOS",
-
-titulo:
-`${emp.nombres} ${emp.apellidos}`,
-
-fecha:
-emp.nacimiento,
-
-detalle:"Cumpleaños"
-
-}));
-
-const capacitaciones = capacitacionesData.map(cap=>({
-
-id:`cap-${cap.id}`,
-
-tipo:"CAPACITACION",
-
-titulo:cap.nombre,
-
-fecha:cap.fecha,
-
-detalle:
-`${cap.empleados.length} participantes - ${cap.duracion}h`
-
-
-}));
-
-const contratos = contratosData.map(con=>{
-
-
-const empleado = empleadosData.find(
-e=>e.id===con.empleadoId
-);
-
-
-return {
-
-
-id:`contrato-${con.id}`,
-
-tipo:"CONTRATO",
-titulo:
-empleado
-?
-`${empleado.nombres} ${empleado.apellidos}`
-:
-"Empleado desconocido",
-
-fecha:con.fechaFin,
-
-detalle:
-`Contrato vence ${con.fechaFin}`
+    setEventos(res.data);
 
 };
-});
 
-return [
-
-...cumpleaños,
-...capacitaciones,
-...contratos
-
-];
-
-});
 const iconoEvento=(tipo)=>{
 
 if(tipo==="CUMPLEAÑOS")
@@ -122,18 +58,27 @@ return <GraduationCap size={22}/>;
 return <FileText size={22}/>;
 
 };
-const obtenerFechaEvento = (fecha) => {
+const obtenerFechaEvento = (fecha)=>{
 
-    const [dia, mes, año] = fecha.split("/");
+    const f = new Date(fecha);
 
-    return {
-        dia: Number(dia),
-        mes: Number(mes) - 1,
-        año: Number(año)
+    return{
+
+        dia:f.getDate(),
+
+        mes:f.getMonth(),
+
+        año:f.getFullYear()
+
     };
 
 };
 console.log(eventos);
+useEffect(()=>{
+
+    obtenerEventos();
+
+},[]);
 return(
 
 <div className="p-6 bg-slate-50 min-h-screen">
@@ -522,10 +467,14 @@ mt-1
 ">
 
 <span>
-{evento.fecha}
+{
+new Date(evento.fecha).toLocaleDateString("es-PE",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+})
+}
 </span>
-
-
 <span>
 •
 </span>

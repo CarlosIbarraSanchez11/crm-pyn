@@ -1,8 +1,7 @@
 import { Search, Plus, Edit, Eye,Trash2, FileText, CheckCircle, Clock, XCircle } from "lucide-react";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import ModalNuevoContrato from "./Modal/ModalNuevoContrato";
-import empleadosData from "../../../../data/empleados";
-import contratosData from "../../../../data/contratos";
+import api from "../../../../api/axios";
 const COLORS = {
   navy:"rgb(23 37 76)",
   orange:"rgb(243 146 0)"
@@ -11,32 +10,83 @@ const COLORS = {
 export default function Contratos(){
 
 const [modal,setModal]=useState(false);
-const [empleados] = useState(empleadosData);
-
-const [contratos] = useState(
- contratosData.map(contrato=>{
-
-   const empleado = empleados.find(
-     e=>e.id===contrato.empleadoId
-   );
-
-   return {
-     ...contrato,
-     empleado
-   }
-
- })
-);
+const [empleados,setEmpleados] = useState([]);
+const [contratos,setContratos] = useState([]);
 const [busqueda, setBusqueda] = useState("");
 const [tipoContrato, setTipoContrato] = useState("");
 const [estado, setEstado] = useState("");
+const obtenerEmpleados = async()=>{
+
+ try{
+
+   const res = await api.get("/rrhh/empleados");
+
+   setEmpleados(res.data);
+
+ }catch(error){
+
+   console.log(error);
+
+ }
+
+};
+const obtenerContratos = async()=>{
+
+ try{
+
+   const res = await api.get("/rrhh/contratos");
+
+   setContratos(res.data);
+
+ }catch(error){
+
+   console.log(error);
+
+ }
+
+};
+const guardarContrato = async(datos)=>{
+
+try{
+
+ const res = await api.post(
+   "/rrhh/contratos",
+   datos
+ );
+
+ console.log(res.data);
+
+
+ // actualizar tabla
+ obtenerContratos();
+
+
+ // cerrar modal
+ setModal(false);
+
+
+}catch(error){
+
+ console.log(error);
+
+}
+
+
+};
+useEffect(()=>{
+
+ obtenerContratos();
+ obtenerEmpleados();
+
+},[]);
+
 const contratosFiltrados = contratos.filter(contrato => {
 
   const coincideBusqueda =
-    `${contrato.empleado.nombres} ${contrato.empleado.apellidos}`
+    `${contrato.empleado?.nombres || ""} ${contrato.empleado?.apellidos || ""}`
       .toLowerCase()
       .includes(busqueda.toLowerCase()) ||
-    contrato.empleado.dni.includes(busqueda);
+    contrato.empleado?.dni?.includes(busqueda);
 
   const coincideTipo =
     tipoContrato === "" ||
@@ -53,6 +103,15 @@ const contratosFiltrados = contratos.filter(contrato => {
   );
 
 });
+const formatearFecha = (fecha)=>{
+
+if(!fecha) return "-";
+
+return new Date(fecha)
+.toISOString()
+.split("T")[0];
+
+};
 return(
 
 <div className="p-6 bg-slate-50 min-h-screen">
@@ -80,12 +139,7 @@ style={{backgroundColor:COLORS.orange}}
 Nuevo contrato
 </button>
 
-
 </div>
-
-
-
-
 
 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
 
@@ -93,36 +147,55 @@ Nuevo contrato
 <Card
 icon={<FileText/>}
 titulo="Total contratos"
-valor={contratos.length}
+valor={contratosFiltrados.length}
 />
 
 
 <Card
 icon={<CheckCircle/>}
 titulo="Activos"
-valor={contratos.filter(c=>c.estado==="Activo").length}
+valor={
+  contratosFiltrados.filter(
+    c=>c.estado==="Activo"
+  ).length
+}
 />
 
 
 <Card
 icon={<Clock/>}
 titulo="Por vencer"
-valor="0"
+valor={
+  contratosFiltrados.filter(c=>{
+
+    if(!c.fechaFin) return false;
+
+    const hoy = new Date();
+    const fechaFin = new Date(c.fechaFin);
+
+    const diferencia =
+    (fechaFin - hoy) /
+    (1000 * 60 * 60 * 24);
+
+
+    return diferencia <= 30 && diferencia >=0;
+
+  }).length
+}
 />
 
 
 <Card
 icon={<XCircle/>}
 titulo="Finalizados"
-valor="0"
+valor={
+  contratosFiltrados.filter(
+    c=>c.estado==="Finalizado"
+  ).length
+}
+
 />
-
-
 </div>
-
-
-
-
 
 <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 mb-6">
 
@@ -302,15 +375,15 @@ Vínculo laboral
 </td>
 
 <td className="p-4 text-sm">
-{contrato.fechaInicio}
+{formatearFecha(contrato.fechaInicio)}
 </td>
 
 <td className="p-4 text-sm">
-{contrato.fechaFin}
+{formatearFecha(contrato.fechaFin)}
 </td>
 
 <td className="p-4 text-sm">
-{contrato.salario}
+  S/ {Number(contrato.salario).toFixed(2)}
 </td>
 
 <td className="p-4">
@@ -371,10 +444,15 @@ Vínculo laboral
 {
 modal &&
 <ModalNuevoContrato
+
 cerrar={()=>setModal(false)}
+
+empleados={empleados}
+
+onGuardar={guardarContrato}
+
 />
 }
-
 
 </div>
 

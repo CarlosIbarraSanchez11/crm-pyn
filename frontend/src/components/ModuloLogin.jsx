@@ -2,8 +2,7 @@
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { usuarios } from "../data/usuarios";
-
+import api from "../api/axios";
 export default function ModuloLogin({
   moduloNombre,
   moduloIcon,
@@ -17,49 +16,78 @@ export default function ModuloLogin({
 
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const handleSubmit = async (e)=>{
 
-    setError("");
-    setLoading(true);
+ e.preventDefault();
 
-    try {
-      const usuario = usuarios.find(
-        (u) => u.correo === correo && u.password === password
-      );
+ setError("");
+ setLoading(true);
 
-      if (!usuario) {
-        setError("Correo o contraseña incorrectos");
-        return;
-      }
 
-      // 🚨 VALIDACIÓN CORREGIDA: Permitimos el acceso si es del módulo O si es ADMIN
-      if (
-        usuario.modulo !== moduloKey.toUpperCase() && 
-        usuario.modulo !== "ADMIN"
-      ) {
-        setError("No tienes acceso a este módulo");
-        return;
-      }
+ try{
 
-      localStorage.setItem(
-        `${moduloKey}User`,
-        JSON.stringify(usuario)
-      );
 
-      const finalRedirect =
-        typeof redirectPath === "function"
-          ? redirectPath(usuario)
-          : redirectPath;
+   const response = await api.post("/auth/login",{
 
-      navigate(finalRedirect);
-    } catch (err) {
-      console.error(err);
-      setError("Ocurrió un error inesperado.");
-    } finally {
-      setLoading(false);
-    }
-  };
+      correo,
+      password,
+      modulo: moduloKey
+
+   });
+
+
+
+   const usuario=response.data;
+
+
+
+   localStorage.setItem(
+     `${moduloKey}User`,
+     JSON.stringify(usuario)
+   );
+
+
+
+   const finalRedirect =
+     typeof redirectPath==="function"
+     ? redirectPath(usuario)
+     : redirectPath;
+
+
+   navigate(finalRedirect);
+
+
+
+ }catch(error){
+
+
+   console.error(error);
+
+
+   if(error.response?.status===401){
+
+      setError("Correo o contraseña incorrectos");
+
+   }
+   else if(error.response?.status===403){
+
+      setError("No tienes acceso a este módulo");
+
+   }
+   else{
+
+      setError("Error al iniciar sesión");
+
+   }
+
+
+ }finally{
+
+   setLoading(false);
+
+ }
+
+};
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#172554] via-[#1E3A8A] to-[#F39200] flex items-center justify-center p-4">

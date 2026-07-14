@@ -3,14 +3,23 @@ import {
   Camera,
   RotateCcw,
   Check,
-  LoaderCircle,
+  Loader2,
   AlertCircle,
   User,
   Briefcase,
   ScanFace,
   SwitchCamera,
 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+
+import { 
+  useEffect, 
+  useMemo, 
+  useRef, 
+  useState, 
+  useCallback 
+} from "react";
+
+import * as faceapi from "face-api.js";
 
 // Colores de marca
 const COLORS = {
@@ -25,21 +34,23 @@ const COLORS = {
 const ESTADOS = ["Activo", "Inactivo"];
 
 const CAMPOS_REQUERIDOS = ["nombres", "apellidos", "dni", "fechaNacimiento"];
-
 const FORM_INICIAL = {
-  nombres: "",
-  apellidos: "",
-  dni: "",
-  fechaNacimiento: "",
-  email: "",
-  telefono: "",
-  direccion: "",
-  cargo: "",
-  departamento: "",
-  empresa: "",
-  estado: "Activo",
-};
 
+nombres:"",
+apellidos:"",
+dni:"",
+fechaNacimiento:"",
+email:"",
+telefono:"",
+direccion:"",
+cargo:"",
+departamento:"",
+empresa:"",
+estado:"Activo",
+
+descriptor:null
+
+};
 function Campo({ label, required, error, hint, children }) {
   return (
     <div>
@@ -84,10 +95,8 @@ const inputBase =
 export default function ModalNuevoEmpleado({ cerrar, onGuardar }) {
     const videoRef = useRef(null);
     const streamRef = useRef(null);
-    const iniciarVideoRef = useRef(false);
   const [form, setForm] = useState(FORM_INICIAL);
   const [errores, setErrores] = useState({});
-  const [foto, setFoto] = useState(null);
   const [camaraActiva, setCamaraActiva] = useState(false);
   const [cargandoCamara, setCargandoCamara] = useState(false);
   const [errorCamara, setErrorCamara] = useState(null);
@@ -95,7 +104,40 @@ export default function ModalNuevoEmpleado({ cerrar, onGuardar }) {
   const [guardadoOk, setGuardadoOk] = useState(false);
   const [dispositivos, setDispositivos] = useState([]);
   const [dispositivoIdx, setDispositivoIdx] = useState(0);
+  const [foto,setFoto]=useState(null);
+const [descriptor,setDescriptor]=useState(null);
+const [modelosListos,setModelosListos]=useState(false);
+const detenerCamara = useCallback(() => {
 
+  if(streamRef.current){
+
+    streamRef.current
+      .getTracks()
+      .forEach(track => track.stop());
+
+  }
+
+  streamRef.current = null;
+
+
+  if(videoRef.current){
+
+    videoRef.current.pause();
+    videoRef.current.srcObject = null;
+
+  }
+  setCamaraActiva(false);
+},[]);
+useEffect(()=>{
+const cargarModelos=async()=>{
+const MODEL_URL="/models";
+await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
+await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+setModelosListos(true);
+};
+cargarModelos();
+},[]);
   // Corta la cámara al desmontar el modal, evitando dejar el LED encendido
   useEffect(() => {
     return () => detenerCamara();
@@ -110,61 +152,121 @@ export default function ModalNuevoEmpleado({ cerrar, onGuardar }) {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [cerrar]);
-const detenerCamara = useCallback(() => {
-  if (streamRef.current) {
-    streamRef.current.getTracks().forEach((track) => track.stop());
-  }
+const abrirCamara = useCallback(async()=>{
 
-  streamRef.current = null;
+setErrorCamara(null);
+setCargandoCamara(true);
 
-  if (videoRef.current) {
-    videoRef.current.pause();
-    videoRef.current.srcObject = null;
-    videoRef.current.load();
-  }
 
-  setCamaraActiva(false);
-}, []);
-const abrirCamara = useCallback(async () => {
-  setErrorCamara(null);
-  setCargandoCamara(true);
+try{
 
-  try {
-    detenerCamara();
 
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: "user",
-        width: { ideal: 640 },
-        height: { ideal: 480 },
-      },
-      audio: false,
-    });
+detenerCamara();
 
-    streamRef.current = stream;
 
-    const cams = await navigator.mediaDevices.enumerateDevices();
+const stream = await navigator.mediaDevices.getUserMedia({
 
-    setDispositivos(
-      cams.filter((d) => d.kind === "videoinput")
-    );
+video:{
+facingMode:"user",
+width:{ideal:640},
+height:{ideal:480}
+},
 
-    iniciarVideoRef.current = true;
-    setCamaraActiva(true);
-  } catch (error) {
-    console.error(error);
+audio:false
 
-    if (error.name === "NotAllowedError") {
-      setErrorCamara("Permiso de cámara denegado.");
-    } else if (error.name === "NotFoundError") {
-      setErrorCamara("No existe una cámara conectada.");
-    } else {
-      setErrorCamara("No se pudo iniciar la cámara.");
-    }
-  } finally {
-    setCargandoCamara(false);
-  }
-}, [detenerCamara]);
+});
+
+
+streamRef.current = stream;
+
+
+const video = videoRef.current;
+
+
+if(video){
+
+video.srcObject = stream;
+
+
+await new Promise((resolve)=>{
+
+
+video.onloadedmetadata = ()=>{
+
+
+video.play()
+.then(resolve)
+.catch(resolve);
+
+
+};
+
+
+});
+
+
+}
+
+
+
+const cams = await navigator.mediaDevices.enumerateDevices();
+
+
+setDispositivos(
+cams.filter(
+(d)=>d.kind==="videoinput"
+)
+);
+
+
+setCamaraActiva(true);
+
+
+console.log("✔ Cámara lista");
+
+
+}catch(error){
+
+
+console.error(error);
+
+
+if(error.name==="NotAllowedError"){
+
+setErrorCamara(
+"Permiso de cámara denegado."
+);
+
+
+}else if(error.name==="NotFoundError"){
+
+setErrorCamara(
+"No existe cámara conectada."
+);
+
+
+}else{
+
+
+setErrorCamara(
+"No se pudo iniciar la cámara."
+);
+
+
+}
+
+
+
+}finally{
+
+
+setCargandoCamara(false);
+
+
+}
+
+
+},[detenerCamara]);
 const cambiarCamara = useCallback(async () => {
   if (dispositivos.length <= 1) return;
 
@@ -185,10 +287,32 @@ const cambiarCamara = useCallback(async () => {
       },
       audio: false,
     });
+streamRef.current = stream;
 
-    streamRef.current = stream;
-    iniciarVideoRef.current = true;
-    setCamaraActiva(true);
+
+const video = videoRef.current;
+
+
+if(video){
+
+video.srcObject = stream;
+
+
+await new Promise(resolve=>{
+
+video.onloadedmetadata=()=>{
+
+video.play()
+.then(resolve)
+.catch(resolve);
+
+};
+
+
+});
+
+}
+setCamaraActiva(true);
   } catch (err) {
     console.error(err);
     setErrorCamara("No se pudo cambiar de cámara.");
@@ -199,79 +323,84 @@ const cambiarCamara = useCallback(async () => {
   detenerCamara,
 ]);
 
-useEffect(()=>{
+const capturarRostro = async()=>{
 
-  if(
-    camaraActiva &&
-    iniciarVideoRef.current &&
-    videoRef.current &&
-    streamRef.current
-  ){
+if(!modelosListos){
+  alert("Modelos faciales cargando...");
+  return;
+}
 
-    videoRef.current.srcObject =
-      streamRef.current;
+const video = videoRef.current;
 
-
-    videoRef.current.play()
-      .catch(err=>{
-        console.log(err);
-      });
+if(!video){
+  return;
+}
 
 
-    iniciarVideoRef.current=false;
-
-  }
-
-},[camaraActiva]);
-
-
-
-const capturarRostro = ()=>{
-
-  const video = videoRef.current;
+const deteccion =
+await faceapi
+.detectSingleFace(
+video,
+new faceapi.TinyFaceDetectorOptions()
+)
+.withFaceLandmarks()
+.withFaceDescriptor();
 
 
-  if(
-    !video ||
-    video.readyState < 2
-  ){
-    return;
-  }
+if(!deteccion){
+
+alert("No se detectó rostro");
+
+return;
+
+}
 
 
-  const canvas=document.createElement("canvas");
+const vector =
+Array.from(
+deteccion.descriptor
+);
 
 
-  canvas.width=video.videoWidth;
-  canvas.height=video.videoHeight;
+const canvas=document.createElement("canvas");
+
+canvas.width=video.videoWidth;
+canvas.height=video.videoHeight;
 
 
-  const ctx=canvas.getContext("2d");
+const ctx=canvas.getContext("2d");
 
+ctx.drawImage(
+video,
+0,
+0
+);
+canvas.toBlob((blob)=>{
 
-  ctx.drawImage(
-    video,
-    0,
-    0,
-    canvas.width,
-    canvas.height
+  const archivo = new File(
+    [blob],
+    "rostro.jpg",
+    {
+      type:"image/jpeg"
+    }
   );
-
-
-  setFoto(
-    canvas.toDataURL("image/png")
-  );
-
-
+  setFoto(archivo);
+}, "image/jpeg");
+setDescriptor(vector);
+// detener después del estado
+setTimeout(()=>{
   detenerCamara();
+},100);
 
 };
+const repetirCaptura = async()=>{
 
-const repetirCaptura = async () => {
   setFoto(null);
-  await abrirCamara();
-};
+  setDescriptor(null);
 
+  await abrirCamara();
+
+};
   const actualizarCampo = (campo, valor) => {
     setForm((prev) => ({ ...prev, [campo]: valor }));
     if (errores[campo]) {
@@ -280,36 +409,76 @@ const repetirCaptura = async () => {
   };
 
   const validar = () => {
-    const nuevosErrores = {};
-    CAMPOS_REQUERIDOS.forEach((campo) => {
-      if (!String(form[campo] ?? "").trim()) {
-        nuevosErrores[campo] = "Este campo es obligatorio";
-      }
-    });
-    if (form.dni && !/^\d{8}$/.test(form.dni.trim())) {
-      nuevosErrores.dni = "El DNI debe tener 8 dígitos";
+
+  const nuevosErrores = {};
+
+  CAMPOS_REQUERIDOS.forEach((campo) => {
+
+    if (!String(form[campo] ?? "").trim()) {
+
+      nuevosErrores[campo] = "Este campo es obligatorio";
+
     }
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
-      nuevosErrores.email = "Ingresa un correo válido";
-    }
-    setErrores(nuevosErrores);
-    return Object.keys(nuevosErrores).length === 0;
+
+  });
+
+
+  console.log("FORM ACTUAL:", form);
+  console.log("ERRORES:", nuevosErrores);
+
+
+  setErrores(nuevosErrores);
+
+  return Object.keys(nuevosErrores).length === 0;
+};
+
+const guardar = async () => {
+
+  console.log("BOTON GUARDAR PRESIONADO");
+
+
+  if (!validar()) {
+    console.log("VALIDACION FALLIDA");
+    return;
+  }
+
+
+  const datos = {
+    ...form,
+    fotoPerfil: foto,
+    descriptor
   };
 
-  const guardar = async () => {
-    if (!validar()) return;
-    setGuardando(true);
-    try {
-      await onGuardar?.({ ...form, foto });
-      setGuardadoOk(true);
-      setTimeout(() => cerrar?.(), 900);
-    } catch (error) {
-      console.error(error);
-      setErrores((prev) => ({ ...prev, _general: "No se pudo guardar. Intenta de nuevo." }));
-    } finally {
-      setGuardando(false);
-    }
-  };
+
+  console.log("DATOS QUE ENVIO AL PADRE:", datos);
+
+
+  setGuardando(true);
+
+
+  try {
+
+    await onGuardar(datos);
+
+
+    console.log("GUARDADO CORRECTO");
+
+    setGuardadoOk(true);
+
+    setTimeout(() => cerrar?.(),900);
+
+
+  } catch(error){
+
+    console.error("ERROR GUARDANDO:",error);
+
+  } finally {
+
+    setGuardando(false);
+
+  }
+
+};
 
   const camposCompletos = useMemo(
     () => CAMPOS_REQUERIDOS.filter((c) => String(form[c] ?? "").trim()).length,
@@ -524,49 +693,16 @@ const repetirCaptura = async () => {
               {/* Panel de cámara / vista previa */}
               <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-950">
                 <div className="relative flex h-56 items-center justify-center">
-                  {foto ? (
-                    <img src={foto} alt="Rostro capturado" className="h-full w-full object-cover" />
-                  ) : (
-                    <>
-                      <video
-                        ref={videoRef}
-                        autoPlay
-                        muted
-                        playsInline
-                        className={`h-full w-full object-cover ${
-                            camaraActiva ? "block" : "hidden"
-                        }`}
-                        />
-                      {camaraActiva && (
-                        <div className="pointer-events-none absolute inset-0 border-2 border-dashed border-white/25" />
-                      )}
-                      {!camaraActiva && !cargandoCamara && (
-                        <div className="flex flex-col items-center gap-2 text-slate-400">
-                          <Camera size={28} />
-                          <span className="text-xs">La cámara está apagada</span>
-                        </div>
-                      )}
-                      {cargandoCamara && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-slate-950 text-slate-300">
-                            <div className="animate-spin">⏳</div>
-                            <span className="text-xs">
-                            Solicitando acceso a la cámara...
-                            </span>
-                        </div>
-                        )}
-                      {camaraActiva && dispositivos.length > 1 && (
-                        <button
-                          type="button"
-                          onClick={cambiarCamara}
-                          title="Cambiar de cámara"
-                          className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-lg bg-black/40 text-white backdrop-blur transition hover:bg-black/60"
-                        >
-                          <SwitchCamera size={15} />
-                        </button>
-                      )}
-                    </>
-                  )}
-                </div>
+                 <video
+ref={videoRef}
+autoPlay
+muted
+playsInline
+className={`h-full w-full object-cover ${
+foto || !camaraActiva ? "hidden" : "block"
+}`}
+/>
+                  </div>
               </div>
 
               {/* Vista previa / estado + controles */}
@@ -577,7 +713,11 @@ const repetirCaptura = async () => {
                     style={{ borderColor: foto ? COLORS.orange : "rgb(203 213 225)" }}
                   >
                     {foto ? (
-                      <img src={foto} alt="" className="h-full w-full object-cover" />
+                      <img
+                        src={URL.createObjectURL(foto)}
+                        alt=""
+                        className="h-full w-full object-cover"
+                      />
                     ) : (
                       <User size={18} className="text-slate-400" />
                     )}
@@ -602,17 +742,35 @@ const repetirCaptura = async () => {
 
                 <div className="flex flex-col gap-2">
                   {!foto && !camaraActiva && (
-                    <button
-                      type="button"
-                     onClick={() => abrirCamara()}
-                      disabled={cargandoCamara}
-                      className="flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition disabled:opacity-60"
-                      style={{ backgroundColor: COLORS.navy }}
-                    >
-                      {cargandoCamara ? "Cargando..." : <Camera size={16} />}
-                      Abrir cámara
-                    </button>
-                  )}
+
+<button
+type="button"
+onClick={abrirCamara}
+disabled={cargandoCamara}
+className="flex items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-white transition disabled:opacity-60"
+style={{backgroundColor:COLORS.navy}}
+>
+
+{cargandoCamara && (
+<Loader2
+size={16}
+className="animate-spin"
+/>
+)}
+
+{cargandoCamara 
+? "Cargando..."
+: (
+<>
+<Camera size={16}/>
+Abrir cámara
+</>
+)
+}
+
+</button>
+
+)}
 
                   {camaraActiva && !foto && (
                     <button
@@ -674,7 +832,7 @@ const repetirCaptura = async () => {
               className="flex items-center gap-2 rounded-lg px-5 py-2 text-sm font-medium text-white transition disabled:opacity-60"
               style={{ backgroundColor: guardadoOk ? "rgb(21 128 61)" : COLORS.orange }}
             >
-              {guardando && <LoaderCircle size={16} className="animate-spin" />}
+              {guardando && <Loader2 size={16} className="animate-spin" />}
               {guardadoOk ? "Guardado" : "Guardar empleado"}
             </button>
           </div>

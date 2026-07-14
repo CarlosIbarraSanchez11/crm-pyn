@@ -4,10 +4,8 @@ import {
   GraduationCap,
   Cake
 } from "lucide-react";
-import empleadosData from "../../../../data/empleados";
-import contratosData from "../../../../data/contratos";
-import capacitacionesData from "../../../../data/capacitaciones";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../../../../api/axios";
 
 
 const COLORS = {
@@ -17,22 +15,69 @@ const COLORS = {
 
 
 export default function InicioRRHH() {
-const resumen = empleadosData.map(emp=>{
+  const [empleados,setEmpleados]=useState([]);
+const [contratos,setContratos]=useState([]);
+const [capacitaciones,setCapacitaciones]=useState([]);
 
-const contrato = contratosData.find(
+
+const cargarDatos = async()=>{
+
+try{
+
+
+const empleadosRes =
+await api.get("/rrhh/empleados");
+
+
+const contratosRes =
+await api.get("/rrhh/contratos");
+
+
+const capacitacionesRes =
+await api.get("/rrhh/capacitaciones");
+
+
+
+setEmpleados(empleadosRes.data);
+
+setContratos(contratosRes.data);
+
+setCapacitaciones(capacitacionesRes.data);
+
+
+
+}catch(error){
+
+console.log(error);
+
+}
+
+
+};
+
+
+
+useEffect(()=>{
+
+cargarDatos();
+
+},[]);
+const resumen = empleados.map(emp=>{
+
+
+const contrato = contratos.find(
 c=>c.empleadoId===emp.id
 );
 
 
-const capacitaciones = capacitacionesData.filter(
-c=>c.empleados.includes(emp.id)
+const capacitacionesEmpleado = capacitaciones.filter(
+c=>c.empleadoId===emp.id
 );
 
 
 return {
 
 ...emp,
-
 
 inicioContrato:
 contrato?.fechaInicio || "-",
@@ -42,23 +87,44 @@ finContrato:
 contrato?.fechaFin || "-",
 
 
-
 cap1:
-capacitaciones[0]?.fecha || "-",
+capacitacionesEmpleado[0]?.fecha || "-",
 
 
 cap2:
-capacitaciones[1]?.fecha || "-",
+capacitacionesEmpleado[1]?.fecha || "-",
 
 
 cap3:
-capacitaciones[2]?.fecha || "-"
+capacitacionesEmpleado[2]?.fecha || "-"
 
 
 };
 
 
 });
+const formatearFecha=(fecha)=>{
+
+if(!fecha || fecha === "-"){
+    return "-";
+}
+
+
+const fechaNueva = new Date(fecha);
+
+
+if(isNaN(fechaNueva.getTime())){
+    return "-";
+}
+
+
+return fechaNueva.toLocaleDateString("es-PE",{
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric"
+});
+
+};
 return (
 
 <div className="p-6 bg-slate-50 min-h-screen">
@@ -96,7 +162,7 @@ mb-8
 <Card
 icon={<Users/>}
 titulo="Total Empleados"
-valor={empleadosData.length}
+valor={empleados.length}
 detalle="Registrados en el sistema"
 />
 
@@ -104,7 +170,7 @@ detalle="Registrados en el sistema"
 icon={<FileText/>}
 titulo="Contratos Activos"
 valor={
-contratosData.length
+contratos.length
 }
 detalle="En vigencia actualmente"
 />
@@ -113,7 +179,7 @@ detalle="En vigencia actualmente"
 icon={<GraduationCap/>}
 titulo="Capacitaciones Próximas"
 valor={
-capacitacionesData.length
+capacitaciones.length
 }
 detalle="Programadas próximamente"
 />
@@ -122,11 +188,16 @@ detalle="Programadas próximamente"
 icon={<Cake/>}
 titulo="Cumpleaños del Mes"
 valor={
-empleadosData.filter(emp=>{
+empleados.filter(emp=>{
 
-const fecha = emp.nacimiento.split("/");
+const fecha =
+new Date(emp.fechaNacimiento);
 
-return Number(fecha[1]) === new Date().getMonth()+1;
+
+return fecha.getMonth()
+===
+new Date().getMonth();
+
 
 }).length
 }
@@ -306,7 +377,7 @@ style={{backgroundColor:COLORS.navy}}
 
 
 <td className="p-4 text-sm">
-{emp.inicioContrato}
+{formatearFecha(emp.inicioContrato)}
 </td>
 
 
@@ -321,7 +392,7 @@ bg-orange-100
 text-orange-700
 ">
 
-{emp.finContrato}
+{formatearFecha(emp.finContrato)}
 
 </span>
 
@@ -330,18 +401,15 @@ text-orange-700
 
 
 <td className="p-4 text-sm">
-{emp.cap1}
-</td>
+{formatearFecha(emp.cap1)}</td>
 
 
 <td className="p-4 text-sm">
-{emp.cap2}
-</td>
+{formatearFecha(emp.cap2)}</td>
 
 
 <td className="p-4 text-sm">
-{emp.cap3}
-</td>
+{formatearFecha(emp.cap3)}</td>
 
 
 

@@ -48,29 +48,35 @@ function SectionHeading({icon:Icon,title,subtitle}) {
   );
 }
 
-export default function ModalNuevoContrato({cerrar,onGuardar}) {
-
+export default function ModalNuevoContrato({
+cerrar,
+onGuardar,
+empleados
+}){
   const [form,setForm] = useState(FORM_INICIAL);
   const [errores,setErrores] = useState({});
   const [guardando,setGuardando] = useState(false);
   const [guardadoOk,setGuardadoOk] = useState(false);
-
-  const empleados = [
-    {id:1,nombre:"Zoraida Cunis Huaman",dni:"43986791"},
-    {id:2,nombre:"Shiara Kasandra Jade Chinga Diaz",dni:"78017283"}
-  ];
-
   useEffect(()=>{
     const tecla=(e)=>e.key==="Escape" && cerrar?.();
     window.addEventListener("keydown",tecla);
     return()=>window.removeEventListener("keydown",tecla);
   },[cerrar]);
-
   const cambiar=(campo,valor)=>{
-    setForm(prev=>({...prev,[campo]:valor}));
-    if(errores[campo]) setErrores(prev=>({...prev,[campo]:null}));
-  };
-
+    if(campo==="empleadoId"){
+      valor=Number(valor);
+    }
+    setForm(prev=>({
+    ...prev,
+    [campo]:valor
+    }));
+    if(errores[campo]){
+    setErrores(prev=>({
+    ...prev,
+    [campo]:null
+    }));
+    }
+    };
   const validar=()=>{
     const err={};
 
@@ -128,12 +134,33 @@ export default function ModalNuevoContrato({cerrar,onGuardar}) {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
 
             <Campo label="Empleado" required error={errores.empleadoId}>
-              <select className={inputBase} value={form.empleadoId} onChange={e=>cambiar("empleadoId",e.target.value)}>
-                <option value="">Seleccionar empleado</option>
-                {empleados.map(emp=>
-                  <option key={emp.id} value={emp.id}>{emp.nombre} - {emp.dni}</option>
-                )}
-              </select>
+              <select
+                className={inputBase}
+                value={form.empleadoId}
+                onChange={
+                e=>cambiar(
+                "empleadoId",
+                e.target.value
+                )
+                }
+                >
+
+                <option value="">
+                Seleccionar empleado
+                </option>
+                  {(empleados ?? []).map(emp => (
+
+                  <option
+                  key={emp.id}
+                  value={emp.id}
+                  >
+
+                  {emp.nombres} {emp.apellidos} - {emp.dni}
+
+                  </option>
+
+                  ))}
+                </select>
             </Campo>
 
 

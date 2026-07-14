@@ -1,5 +1,6 @@
 import { Search, Plus, Eye, Edit, Trash2,GraduationCap, Users, CheckCircle, Clock } from "lucide-react";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import api from "../../../../api/axios";
 import ModalNuevoCapacitacion from "./Modal/ModalNuevoCapacitacion";
 import capacitacionesData from "../../../../data/capacitaciones";
 import empleadosData from "../../../../data/empleados";
@@ -8,33 +9,34 @@ const COLORS = { navy:"rgb(23 37 76)", orange:"rgb(243 146 0)" };
 export default function Capacitaciones(){
 
 const [modal,setModal]=useState(false);
-const [capacitaciones]=useState(
-
-capacitacionesData.map(cap=>({
-
-...cap,
-
-empleados:
-cap.empleados
-.map(id=>empleadosData.find(emp=>emp.id===id))
-.filter(Boolean)
-
-}))
-
-);
 const [busqueda, setBusqueda] = useState("");
 const [estado, setEstado] = useState("");
+const [modalDocumento,setModalDocumento]=useState(false);
+const [documento,setDocumento]=useState("");
+const [empleados,setEmpleados]=useState([]);
+const [capacitaciones,setCapacitaciones]=useState([]);
+const obtenerEmpleados=async()=>{
+const res=
+await api.get("/rrhh/empleados");
+setEmpleados(res.data);
+
+};
+const obtenerCapacitaciones=async()=>{
+const res=
+await api.get("/rrhh/capacitaciones");
+setCapacitaciones(res.data);
+};
 const capacitacionesFiltradas = capacitaciones.filter(cap => {
 
   const coincideBusqueda =
 
     cap.nombre.toLowerCase().includes(busqueda.toLowerCase()) ||
 
-    cap.empleados.some(emp =>
-      `${emp.nombres} ${emp.apellidos}`
-        .toLowerCase()
-        .includes(busqueda.toLowerCase())
-    );
+    cap.empleados.some(rel =>
+      `${rel.empleado.nombres} ${rel.empleado.apellidos}`
+      .toLowerCase()
+      .includes(busqueda.toLowerCase())
+      );
 
   const coincideEstado =
     estado === "" ||
@@ -46,6 +48,42 @@ const capacitacionesFiltradas = capacitaciones.filter(cap => {
   );
 
 });
+
+useEffect(()=>{
+obtenerEmpleados();
+obtenerCapacitaciones();
+},[]);
+const guardarCapacitacion = async (formData) => {
+
+    const data = new FormData();
+
+    data.append("nombre", formData.nombre);
+    data.append("fecha", formData.fecha);
+    data.append("hora", formData.hora);
+    data.append("duracion", formData.duracion);
+    data.append("institucion", formData.institucion);
+    data.append("estado", formData.estado);
+    data.append("descripcion", formData.descripcion);
+
+    formData.empleados.forEach(id => {
+        data.append("empleados", id);
+    });
+
+    if (formData.evidencia) {
+        data.append("evidencia", formData.evidencia);
+    }
+
+    await api.post(
+        "/rrhh/capacitaciones",
+        data
+    );
+
+    // Volver a cargar la tabla
+    await obtenerCapacitaciones();
+
+    // Cerrar modal
+    setModal(false);
+};
 return(
 <div className="p-6 bg-slate-50 min-h-screen">
 
@@ -221,26 +259,27 @@ style={{backgroundColor:COLORS.navy}}
 
 <td className="p-4">
 {
-cap.empleados.map(emp=>(
-
+cap.empleados.map(rel=>(
 <p
-key={emp.id}
+key={rel.empleado.id}
 className="text-sm text-slate-700"
 >
-{emp.nombres} {emp.apellidos}
-
+{rel.empleado.nombres} {rel.empleado.apellidos}
 </p>
-
 ))
 }
 
 </td>
 <td className="p-4">
-
 <p className="text-sm font-medium">
-{cap.fecha}
+{
+new Date(cap.fecha).toLocaleDateString("es-PE",{
+day:"2-digit",
+month:"2-digit",
+year:"numeric"
+})
+}
 </p>
-
 <p className="text-xs text-slate-400">
 {cap.hora}
 </p>
@@ -272,7 +311,25 @@ className="text-sm text-slate-700"
 
 <td className="p-4">
   <div className="flex justify-center gap-3">
-    
+     <button
+            onClick={()=>{
+                setDocumento(cap.evidencia);
+                setModalDocumento(true);
+            }}
+            className="
+                h-9
+                w-9
+                rounded-lg
+                bg-blue-50
+                text-blue-600
+                flex
+                items-center
+                justify-center
+                hover:bg-blue-100
+            "
+        >
+            <Eye size={17}/>
+        </button>
     <button
       className="
       h-9
@@ -328,17 +385,81 @@ className="text-sm text-slate-700"
 </div>
 
 </div>
-
-
-
 {
 modal &&
 <ModalNuevoCapacitacion
 cerrar={()=>setModal(false)}
+empleados={empleados}
+onGuardar={guardarCapacitacion}
 />
+
 }
+{
+modalDocumento && (
 
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
 
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
+
+        <div className="flex items-center justify-between border-b px-6 py-4">
+
+            <h2 className="text-lg font-semibold text-slate-800">
+                Evidencia de capacitación
+            </h2>
+
+            <button
+                onClick={()=>{
+                    setModalDocumento(false);
+                    setDocumento("");
+                }}
+                className="rounded-lg p-2 hover:bg-slate-100"
+            >
+                ✕
+            </button>
+
+        </div>
+
+        <div className="flex-1 bg-slate-100">
+
+            {
+            documento ? (
+
+                documento.toLowerCase().endsWith(".pdf")
+
+                ?
+
+                <iframe
+                    src={`http://localhost:3000/${documento}`}
+                    title="Documento"
+                    className="w-full h-full"
+                />
+
+                :
+
+                <img
+                    src={`http://localhost:3000/${documento}`}
+                    alt="Evidencia"
+                    className="w-full h-full object-contain"
+                />
+
+            )
+
+            :
+
+            <div className="flex h-full items-center justify-center text-slate-500">
+                No existe evidencia.
+            </div>
+
+            }
+
+        </div>
+
+    </div>
+
+</div>
+
+)
+}
 </div>
 
 )

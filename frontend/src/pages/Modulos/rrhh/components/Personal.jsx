@@ -1,5 +1,6 @@
 import { Search, Plus, Edit, Eye, Users, Trash2,UserCheck, UserX, Building2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../../../../api/axios";
 import empleadosData from "../../../../data/empleados";
 import ModalNuevoEmpleado from "./Modal/ModalNuevoEmpleado";
 
@@ -8,7 +9,7 @@ const COLORS = { navy:"rgb(23 37 76)", orange:"rgb(243 146 0)" };
 export default function Personal(){
 
 const [modal,setModal]=useState(false);
-const [empleados]=useState(empleadosData);
+const [empleados,setEmpleados]=useState([]);
 const [busqueda, setBusqueda] = useState("");
 const [cargo, setCargo] = useState("");
 const [empresa, setEmpresa] = useState("");
@@ -33,6 +34,70 @@ const empleadosFiltrados = empleados.filter(emp => {
   );
 
 });
+const obtenerEmpleados = async()=>{
+
+ const res = await api.get("/rrhh/empleados");
+
+ setEmpleados(res.data);
+
+};
+useEffect(()=>{
+  obtenerEmpleados();
+  
+},[]);
+const guardarEmpleado = async(datos)=>{
+
+
+const formData = new FormData();
+
+
+Object.keys(datos).forEach(key=>{
+
+    if(key !== "fotoPerfil"){
+
+        formData.append(
+            key,
+            datos[key]
+        );
+
+    }
+
+});
+
+
+// imagen
+if(datos.fotoPerfil){
+
+    formData.append(
+        "fotoPerfil",
+        datos.fotoPerfil
+    );
+
+}
+
+
+// VERIFICAR
+console.log("FORMDATA QUE ENVIO:");
+
+for (let dato of formData.entries()) {
+    console.log(dato[0], dato[1]);
+}
+
+
+const res = await api.post(
+"/rrhh/empleados",
+formData,
+{
+headers:{
+"Content-Type":"multipart/form-data"
+}
+}
+);
+console.log(res.data);
+// actualizar tabla
+obtenerEmpleados();
+setModal(false);
+};
 return(
 <div className="p-6 bg-slate-50 min-h-screen">
 
@@ -47,13 +112,43 @@ return(
 </button>
 </div>
 
-
 <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-8">
 
-<Card icon={<Users/>} titulo="Total empleados" valor={empleados.length}/>
-<Card icon={<UserCheck/>} titulo="Activos" valor={empleados.filter(e=>e.estado==="Activo").length}/>
-<Card icon={<UserX/>} titulo="Inactivos" valor="0"/>
-<Card icon={<Building2/>} titulo="Empresas" valor="1"/>
+<Card 
+ icon={<Users/>} 
+ titulo="Total empleados" 
+ valor={empleados.length}
+/>
+
+<Card 
+ icon={<UserCheck/>} 
+ titulo="Activos" 
+ valor={
+   empleados.filter(
+     e=>e.estado==="Activo"
+   ).length
+ }
+/>
+
+<Card 
+ icon={<UserX/>} 
+ titulo="Inactivos" 
+ valor={
+   empleados.filter(
+     e=>e.estado==="Inactivo"
+   ).length
+ }
+/>
+
+<Card 
+ icon={<Building2/>} 
+ titulo="Empresas" 
+ valor={
+   [...new Set(
+     empleados.map(e=>e.empresa)
+   )].filter(Boolean).length
+ }
+/>
 
 </div>
 
@@ -78,8 +173,10 @@ return(
 >
   <option value="">Todos los cargos</option>
 
-  {[...new Set(empleadosData.map(e => e.cargo))].map(c => (
-    <option key={c} value={c}>
+{[...new Set(empleados.map(e => e.cargo))]
+.filter(Boolean)
+.map(c => (
+      <option key={c} value={c}>
       {c}
     </option>
   ))}
@@ -92,7 +189,9 @@ return(
 >
   <option value="">Todas las empresas</option>
 
-  {[...new Set(empleadosData.map(e => e.empresa))].map(emp => (
+{[...new Set(empleados.map(e => e.empresa))]
+.filter(Boolean)
+.map(emp => (
     <option key={emp} value={emp}>
       {emp}
     </option>
@@ -217,9 +316,12 @@ w-full">
 
 </div>
 </div>
-
-{modal && <ModalNuevoEmpleado cerrar={()=>setModal(false)}/>}
-
+{modal && (
+  <ModalNuevoEmpleado
+    cerrar={()=>setModal(false)}
+    onGuardar={guardarEmpleado}
+  />
+)}
 </div>
 )
 

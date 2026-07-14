@@ -8,9 +8,10 @@ AlertTriangle,
 FileCheck
 } from "lucide-react";
 
-import { useState } from "react";
-import empleadosData from "../../../../data/empleados";
-import ssomaData from "../../../../data/ssoma";
+import { useState,useEffect } from "react";
+import ModalSSOMA from "./Modal/ModalSSOMA";
+import api from "../../../../api/axios";
+
 const COLORS={
 navy:"rgb(23 37 76)",
 orange:"rgb(243 146 0)"
@@ -18,39 +19,63 @@ orange:"rgb(243 146 0)"
 
 
 export default function SSOMA(){
-const [trabajadores] = useState(()=>{
+  const [modal, setModal] = useState(false);
+const [trabajadorSeleccionado, setTrabajadorSeleccionado] = useState(null);
+const [trabajadores,setTrabajadores]=useState([]);
 
 
-return ssomaData.map(item=>{
+const obtenerSSOMA = async()=>{
+
+const res = await api.get("/rrhh/ssoma");
 
 
-const empleado = empleadosData.find(
-e=>e.id===item.empleadoId
-);
+const data = res.data.map(item=>({
 
-return {
 id:item.id,
-dni:empleado.dni,
-apellidos:empleado.apellidos,
-nombres:empleado.nombres,
-cargo:empleado.cargo,
-departamento:empleado.departamento,
-empresa:empleado.empresa,
-estado:empleado.estado,
-emoInicio:item.emoInicio,
-emoFin:item.emoFin,
-alturaInicio:item.alturaInicio,
-alturaFin:item.alturaFin,
-sstInicio:item.sstInicio,
-sstFin:item.sstFin,
-patrimonialInicio:item.patrimonialInicio,
-patrimonialFin:item.patrimonialFin
+empleadoId:item.empleado.id,
+dni:item.empleado.dni,
+
+nombres:item.empleado.nombres,
+
+apellidos:item.empleado.apellidos,
+
+cargo:item.empleado.cargo,
+
+departamento:item.empleado.departamento,
+
+empresa:item.empleado.empresa,
+
+estado:item.empleado.estado,
+
+
+emoInicio:item.emoInicio?.substring(0,10) || "",
+emoFin:item.emoFin?.substring(0,10) || "",
+
+alturaInicio:item.alturaInicio?.substring(0,10) || "",
+alturaFin:item.alturaFin?.substring(0,10) || "",
+
+sstInicio:item.sstInicio?.substring(0,10) || "",
+sstFin:item.sstFin?.substring(0,10) || "",
+
+patrimonialInicio:item.patrimonialInicio?.substring(0,10) || "",
+patrimonialFin:item.patrimonialFin?.substring(0,10) || "",
+
+
+}));
+
+
+setTrabajadores(data);
+
 
 };
 
-});
 
-});
+useEffect(()=>{
+
+obtenerSSOMA();
+
+},[]);
+
 const [busqueda, setBusqueda] = useState("");
 const [cargo, setCargo] = useState("");
 const [empresa, setEmpresa] = useState("");
@@ -75,6 +100,62 @@ const trabajadoresFiltrados = trabajadores.filter(item => {
     coincideCargo &&
     coincideEmpresa
   );
+
+});
+const trabajadoresActivos = trabajadores.filter(
+    t=>t.estado==="Activo"
+);
+
+
+// EMO vence en los próximos 30 días
+const emoPorVencer = trabajadores.filter(t=>{
+
+    if(!t.emoFin) return false;
+
+
+    const hoy = new Date();
+
+    hoy.setHours(0,0,0,0);
+
+
+    const fechaFin = new Date(t.emoFin);
+
+    fechaFin.setHours(0,0,0,0);
+
+
+    const diferencia =
+    Math.ceil(
+        (fechaFin - hoy) / (1000 * 60 * 60 * 24)
+    );
+
+
+    return diferencia >=0 && diferencia <=30;
+
+});
+
+// SST vencidos
+const sstVencidos = trabajadores.filter(t=>{
+
+    if(!t.sstFin) return false;
+
+
+    const hoy = new Date();
+    hoy.setHours(0,0,0,0);
+
+
+    const fechaFin = new Date(t.sstFin);
+    fechaFin.setHours(0,0,0,0);
+
+
+    return fechaFin < hoy;
+
+});
+
+
+// SST pendientes (no tiene fecha de vencimiento)
+const sstPendientes = trabajadores.filter(t=>{
+
+    return !t.sstInicio || !t.sstFin;
 
 });
 return(
@@ -104,8 +185,6 @@ md:grid-cols-4
 gap-5
 mb-8
 ">
-
-
 <Card
 icon={<Users/>}
 titulo="Trabajadores"
@@ -116,23 +195,22 @@ valor={trabajadores.length}
 <Card
 icon={<ShieldCheck/>}
 titulo="Activos"
-valor={trabajadores.filter(t=>t.estado==="Activo").length}
+valor={trabajadoresActivos.length}
 />
 
 
 <Card
 icon={<AlertTriangle/>}
 titulo="EMO por vencer"
-valor="0"
+valor={emoPorVencer.length}
 />
 
 
 <Card
 icon={<FileCheck/>}
-titulo="Carnet SST"
-valor="0"
+titulo="SST vencido"
+valor={sstVencidos.length}
 />
-
 </div>
 
 <div className="
@@ -254,17 +332,10 @@ shadow-sm
 overflow-hidden
 ">
 
-
 <div className="overflow-x-auto">
-
-
 <table className="min-w-[1800px] w-full">
-
-
 <thead>
-
 <tr style={{backgroundColor:COLORS.navy}}>
-
 
 {
 [
@@ -302,16 +373,10 @@ text-sm
 ))
 }
 
-
 </tr>
-
 </thead>
 
-
-
-
 <tbody>
-
 
 {
 trabajadoresFiltrados.map(item => (
@@ -424,20 +489,22 @@ text-green-700
 
 <td className="p-4 flex gap-3">
 <button
-className="
-h-9
-w-9
-rounded-lg
-bg-orange-50
-text-orange-600
-flex
-items-center
-justify-center
-"
+    onClick={()=>{
+        setTrabajadorSeleccionado(item);
+        setModal(true);
+    }}
+    className="
+    h-9
+    w-9
+    rounded-lg
+    bg-orange-50
+    text-orange-600
+    flex
+    items-center
+    justify-center
+    "
 >
-
-<Edit size={17}/>
-
+    <Edit size={17}/>
 </button>
 
 
@@ -462,9 +529,16 @@ justify-center
 
 
 </div>
+{
+modal &&
 
+<ModalSSOMA
+    trabajador={trabajadorSeleccionado}
+    cerrar={()=>setModal(false)}
+    actualizarTabla={obtenerSSOMA}
+/>
 
-
+}
 </div>
 
 

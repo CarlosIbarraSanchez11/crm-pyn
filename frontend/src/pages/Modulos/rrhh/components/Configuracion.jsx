@@ -10,8 +10,8 @@ Cake,
 FileText,
 GraduationCap
 } from "lucide-react";
-import configuracionData from "../../../../data/configuracion";
-import { useState } from "react";
+import { useState,useEffect } from "react";
+import api from "../../../../api/axios";
 
 const COLORS={
 navy:"rgb(23 37 76)",
@@ -22,7 +22,16 @@ export default function Configuracion({
     usuario,
     setMenuActivo
 }) {    
-const [form,setForm]=useState(configuracionData);
+const [form,setForm]=useState({
+
+empresa:"",
+correo:"",
+telegramToken:"",
+chatId:"",
+diasContrato:"",
+diasCapacitacion:""
+
+});
 const cambiar=(e)=>{
 
 setForm({
@@ -31,7 +40,60 @@ setForm({
 });
 
 };
+useEffect(()=>{
 
+obtenerConfiguracion();
+
+},[]);
+
+
+
+const obtenerConfiguracion = async()=>{
+
+try{
+
+
+const res = await api.get(
+"/rrhh/configuracion"
+);
+
+
+setForm(res.data);
+
+
+}catch(error){
+
+console.log(error);
+
+}
+
+
+};
+const guardarConfiguracion = async()=>{
+
+try{
+
+
+await api.put(
+"/rrhh/configuracion",
+form
+);
+
+
+alert("Configuración guardada correctamente");
+
+
+}catch(error){
+
+console.log(error);
+
+alert("Error guardando configuración");
+
+
+}
+
+
+};
 
 return(
 
@@ -197,6 +259,8 @@ cambiar={cambiar}
 
 
 <button
+
+onClick={guardarConfiguracion}
 
 className="
 mb-6

@@ -43,18 +43,6 @@ descripcion:"",
 evidencia: null
 };
 
-
-
-const empleados=[
-{id:1,nombre:"Zoraida Cunis Huaman",dni:"43986791"},
-{id:2,nombre:"Shiara Kasandra Jade Chinga Diaz",dni:"78017283"},
-{id:3,nombre:"Jimmy Poul Davila Cartolin",dni:"44118587"},
-{id:4,nombre:"Luis Alberto Arroyo Saenz",dni:"09908178"},
-{id:5,nombre:"Jose Marco Lazaro Gomez",dni:"74647356"}
-];
-
-
-
 function Campo({label,required,children}){
 
 return(
@@ -79,16 +67,15 @@ const inputBase=
 
 
 
-export default function ModalNuevaCapacitacion({cerrar,onGuardar}){
-
+export default function ModalNuevaCapacitacion({
+cerrar,
+onGuardar,
+empleados
+}){
 
 const [form,setForm]=useState(FORM_INICIAL);
-
 const [busqueda,setBusqueda]=useState("");
-
 const [guardando,setGuardando]=useState(false);
-
-
 
 useEffect(()=>{
 
@@ -131,12 +118,14 @@ const seleccionarEmpleado = (id) => {
 };
 const seleccionarTodos=()=>{
 
+if(!empleados) return;
+
 setForm(prev=>({
 
 ...prev,
 
 empleados:
-prev.empleados.length===empleados.length
+prev.empleados.length === empleados.length
 ?
 []
 :
@@ -145,40 +134,60 @@ empleados.map(e=>e.id)
 }));
 
 };
+const guardar = async () => {
 
+    if (form.empleados.length === 0) {
+        alert("Seleccione al menos un empleado");
+        return;
+    }
 
+    if (!form.nombre.trim()) {
+        alert("Ingrese el nombre");
+        return;
+    }
 
-const guardar=async()=>{
+    try {
 
-try{
+        setGuardando(true);
 
-setGuardando(true);
+        const formData = new FormData();
 
-await onGuardar?.(form);
+        formData.append("nombre", form.nombre);
+        formData.append("fecha", form.fecha);
+        formData.append("hora", form.hora);
+        formData.append("duracion", form.duracion);
+        formData.append("institucion", form.institucion);
+        formData.append("estado", form.estado);
+        formData.append("descripcion", form.descripcion);
 
-cerrar?.();
+        form.empleados.forEach((id) => {
+            formData.append("empleados", id);
+        });
 
-}catch(error){
+        if (form.evidencia) {
+            formData.append("evidencia", form.evidencia);
+        }
 
-console.log(error);
+        await onGuardar(formData);
 
-}finally{
+        cerrar();
 
-setGuardando(false);
+    } catch (error) {
 
-}
+        console.log(error);
+
+    } finally {
+
+        setGuardando(false);
+
+    }
 
 };
-
-
-
-const empleadosFiltrados=empleados.filter(e=>
-`${e.nombre} ${e.dni}`
+const empleadosFiltrados = empleados.filter(e=>
+`${e.nombres} ${e.apellidos} ${e.dni}`
 .toLowerCase()
 .includes(busqueda.toLowerCase())
 );
-
-
 
 return(
 
@@ -315,7 +324,7 @@ empleadosFiltrados.map(emp=>(
         onClick={() => seleccionarEmpleado(emp.id)}
     >
         <p className="text-sm font-medium text-slate-800">
-            {emp.nombre}
+            {emp.nombres} {emp.apellidos}
         </p>
 
         <p className="text-xs text-slate-500">
@@ -578,13 +587,7 @@ onChange={e=>cambiar("descripcion",e.target.value)}
 
 </div>
 
-
-
-
-
 <div className="flex justify-end gap-3 border-t px-6 py-4">
-
-
 <button
 onClick={cerrar}
 className="rounded-lg border px-4 py-2 text-sm"
@@ -611,16 +614,10 @@ guardando
 :"Guardar capacitación"
 }
 
-
 </button>
-
-
 </div>
 
-
 </div>
-
-
 </div>
 
 )

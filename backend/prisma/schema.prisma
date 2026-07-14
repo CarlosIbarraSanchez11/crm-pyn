@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id Int @id @default(autoincrement())
+  nombre   String
+  correo   String @unique
+  password String
+  rol String
+  permisos UserPermiso[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Modulo {
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  permisos Permiso[]
+}
+
+model Permiso {
+  id Int @id @default(autoincrement())
+  nombre String
+  moduloId Int
+  modulo Modulo @relation(fields: [moduloId], references: [id])
+  acciones PermisoAccion[]
+  usuarios UserPermiso[]
+}
+
+model UserPermiso {
+  userId Int
+  permisoId Int
+  user User @relation(fields: [userId], references: [id])
+  permiso Permiso @relation(fields: [permisoId], references: [id])
+  @@id([userId, permisoId])
+}
+
+model Accion {
+  id Int @id @default(autoincrement())
+  nombre String @unique
+  permisos PermisoAccion[]
+}
+
+model PermisoAccion {
+  permisoId Int
+  accionId Int
+  permiso Permiso @relation(fields: [permisoId], references: [id])
+  accion Accion @relation(fields: [accionId], references: [id])
+  @@id([permisoId, accionId])
+}
+model Empleado {
+  id Int @id @default(autoincrement())
+  dni String @unique
+  nombres   String
+  apellidos String
+  fechaNacimiento DateTime
+  email     String?
+  telefono  String?
+  direccion String?
+  cargo        String
+  departamento String
+  empresa      String
+  // BIOMETRÍA
+  fotoPerfil String?
+  descriptor Json?
+  estado String
+  contratos Contrato[]
+  ssoma     SSOMA?
+  capacitaciones EmpleadoCapacitacion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Contrato {
+  id Int @id @default(autoincrement())
+  empleadoId Int
+  empleado Empleado @relation(fields: [empleadoId], references: [id])
+  tipo String
+  fechaInicio DateTime @db.Date
+  fechaFin DateTime? @db.Date
+  salario Decimal? @db.Decimal(10,2)
+  descripcion String?
+  estado String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SSOMA {
+  id Int @id @default(autoincrement())
+  empleadoId Int      @unique
+  empleado   Empleado @relation(fields: [empleadoId], references: [id])
+  emoInicio DateTime? @db.Date
+  emoFin    DateTime? @db.Date
+  alturaInicio DateTime? @db.Date
+  alturaFin    DateTime? @db.Date
+  sstInicio DateTime? @db.Date
+  sstFin    DateTime? @db.Date
+  patrimonialInicio DateTime? @db.Date
+  patrimonialFin    DateTime? @db.Date
+}
+
+model Capacitacion {
+  id Int @id @default(autoincrement())
+  nombre String
+  fecha DateTime @db.Date
+  hora String
+  duracion Int?
+  institucion String?
+  estado String
+  descripcion String?
+  evidencia String?
+  empleados EmpleadoCapacitacion[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model EmpleadoCapacitacion {
+  empleadoId     Int
+  capacitacionId Int
+  empleado     Empleado     @relation(fields: [empleadoId], references: [id])
+  capacitacion Capacitacion @relation(fields: [capacitacionId], references: [id])
+  @@id([empleadoId, capacitacionId])
+}
+
+model Configuracion {
+  id Int @id @default(1)
+  empresa String
+  correo String
+  telegramToken String?
+  chatId String?
+  diasContrato Int
+  diasCapacitacion Int
+}
