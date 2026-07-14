@@ -102,7 +102,7 @@ export const usuarios = [
     nombre: "Gestor Proyectos",
     correo: "proyectos@ips.com",
     password: "123456",
-    modulo: "PROYECTOS", // 👈 Este es clave
+    modulo: "PROYECTOS",
     rol: "Usuario",  
      permisos: {
       modulos: ["Resumen", "Proyectos", "Tareas", "Equipo", "Calendario"],
