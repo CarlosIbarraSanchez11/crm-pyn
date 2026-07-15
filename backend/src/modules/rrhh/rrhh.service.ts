@@ -549,3 +549,4 @@ diasCapacitacion:Number(data.diasCapacitacion)
 
 
 };
+
