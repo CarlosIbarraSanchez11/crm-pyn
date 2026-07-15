@@ -277,7 +277,7 @@ const guardarBiometria = async () => {
 
   if (foto) {
     formData.append(
-      "fotoPerfil",
+      "foto",
       foto,
       "perfil.jpg"
     );
@@ -324,7 +324,7 @@ const actualizarBiometria = async () => {
 
   if (foto) {
     formData.append(
-      "fotoPerfil",
+      "foto",
       foto,
       "perfil.jpg"
     );
