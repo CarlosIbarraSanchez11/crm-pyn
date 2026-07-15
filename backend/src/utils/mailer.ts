@@ -21,37 +21,93 @@ export const enviarCorreoCumpleanos = async (
   nombre: string
 ) => {
 
-  await transporter.sendMail({
+  try {
 
-    from: `"RRHH PYP" <${process.env.SMTP_USER}>`,
+    const info = await transporter.sendMail({
 
-    to: email,
+      from: `"RRHH P&P" <${process.env.SMTP_USER}>`,
 
-    subject: "🎉 ¡Feliz cumpleaños!",
+      to: email,
 
-    html: `
-      <div style="font-family:Arial;padding:20px">
+      subject: "🎉 ¡Feliz cumpleaños!",
 
-        <h2 style="color:#F39200">
-          ¡Feliz cumpleaños ${nombre}! 🎂
-        </h2>
+      html: `
+        <div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
 
-        <p>
-          Todo el equipo de PYP te desea un excelente día.
-        </p>
+        <div style="max-width:650px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
 
-        <p>
-          Que tengas muchos éxitos y disfrutes este día.
-        </p>
+            <div style="background:rgb(23,37,76);padding:30px;text-align:center">
 
-        <br>
+            <h1 style="color:#fff;margin:0">
+                Recursos Humanos
+            </h1>
 
-        <b>Área de Recursos Humanos</b>
+            </div>
 
-      </div>
-    `
+            <div style="padding:40px;text-align:center">
 
-  });
+            <div style="font-size:70px">
+                🎉
+            </div>
+
+            <h2 style="color:rgb(23,37,76);margin-bottom:10px">
+                ¡Feliz cumpleaños!
+            </h2>
+
+            <h1 style="color:rgb(243,146,0);margin-top:0">
+                ${nombre}
+            </h1>
+
+            <p style="color:#555;font-size:16px;line-height:28px">
+
+                Todo el equipo de <b>P&P</b> te desea un día lleno de
+                alegría, salud y muchos éxitos.
+
+            </p>
+
+            <div style="margin-top:35px;background:#FFF8ED;border-left:6px solid rgb(243,146,0);padding:18px;border-radius:10px">
+
+                🎂 Que este nuevo año de vida esté lleno de oportunidades,
+                crecimiento profesional y grandes momentos.
+
+            </div>
+
+            </div>
+
+            <div style="background:#F5F7FA;padding:18px;text-align:center;color:#777;font-size:13px">
+
+            ERP Recursos Humanos P&P
+
+            </div>
+
+        </div>
+
+        </div>
+        `
+
+    });
+
+
+    console.log("✅ Cumpleaños enviado");
+    console.log("📧 Destino:", email);
+    console.log("🆔 ID:", info.messageId);
+
+
+    return true;
+
+
+  } catch(error:any) {
+
+
+    console.log(
+      "❌ Error cumpleaños:",
+      error.message
+    );
+
+
+    return false;
+
+  }
 
 };
 export const enviarCorreoContratoNuevo = async (
@@ -70,7 +126,7 @@ export const enviarCorreoContratoNuevo = async (
 
   await transporter.sendMail({
 
-    from:`"RRHH PYP" <${process.env.SMTP_USER}>`,
+    from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
 
     to:correoRRHH,
 
@@ -96,50 +152,63 @@ export const enviarCorreoContratoNuevo = async (
 export const enviarCorreoContratoPorVencer = async(
 
   correoRRHH:string,
-
   empleado:string,
-
   fechaFin:string,
-
   dias:number
 
 )=>{
 
-  await transporter.sendMail({
+  try{
 
-    from:`"RRHH PYP" <${process.env.SMTP_USER}>`,
 
-    to:correoRRHH,
+    const info = await transporter.sendMail({
 
-    subject:"⚠ Contrato por vencer",
+      from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
 
-    html:`
+      to:correoRRHH,
 
-      <h2>Contrato próximo a vencer</h2>
+      subject:"⚠ Contrato por vencer",
 
-      <p>
+      html:`
 
-      El contrato del trabajador
+        <h2>Contrato próximo a vencer</h2>
 
-      <b>${empleado}</b>
+        <p>
+        El contrato del trabajador
+        <b>${empleado}</b>
+        vence el
+        <b>${fechaFin}</b>
+        </p>
 
-      vence el
+        <p>
+        Restan
+        <b>${dias} días</b>
+        </p>
 
-      <b>${fechaFin}</b>
+      `
 
-      </p>
+    });
 
-      <p>
 
-      Restan
+    console.log("✅ Contrato por vencer enviado");
+    console.log("🆔 ID:",info.messageId);
 
-      <b>${dias} días</b>
 
-      </p>
+    return true;
 
-    `
 
-  });
+  }catch(error:any){
+
+
+    console.log(
+      "❌ Error contrato por vencer:",
+      error.message
+    );
+
+
+    return false;
+
+  }
 
 };
 export const enviarCorreoCapacitacion = async(
@@ -158,7 +227,7 @@ export const enviarCorreoCapacitacion = async(
 
   await transporter.sendMail({
 
-    from:`"RRHH PYP" <${process.env.SMTP_USER}>`,
+    from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
 
     to:email,
 
@@ -217,7 +286,7 @@ export const enviarCorreoContratoVencido = async (
 
     await transporter.sendMail({
 
-      from:`"RRHH PYP" <${process.env.SMTP_USER}>`,
+      from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
 
       to:correoRRHH,
 
@@ -248,5 +317,119 @@ export const enviarCorreoContratoVencido = async (
     console.log(error.message);
 
   }
+
+};
+export const enviarCorreoResumenContratos = async (
+
+  correo:string,
+
+  alertas:string[]
+
+)=>{
+
+try{
+
+
+const info = await transporter.sendMail({
+
+from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+to:correo,
+
+subject:"📄 Resumen de contratos RRHH",
+
+html: `
+<div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+
+<div style="max-width:700px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+
+<div style="background:rgb(23,37,76);padding:30px">
+
+<h1 style="margin:0;color:#fff;text-align:center">
+
+Resumen de Contratos
+
+</h1>
+
+<p style="margin-top:8px;color:#D7DCEA;text-align:center">
+
+Área de Recursos Humanos
+
+</p>
+
+</div>
+
+<div style="padding:35px">
+
+<p style="font-size:16px;color:#555">
+
+Se detectaron las siguientes alertas:
+
+</p>
+
+${alertas.map(a=>`
+
+<div style="background:#FAFAFA;
+border-left:6px solid rgb(243,146,0);
+padding:18px;
+margin-bottom:15px;
+border-radius:10px;
+font-size:15px;
+line-height:24px;
+color:#333">
+
+${a}
+
+</div>
+
+`).join("")}
+
+<div style="margin-top:30px;padding:20px;background:#FFF8ED;border-radius:10px">
+
+<b style="color:rgb(23,37,76)">
+Importante
+</b>
+
+<p style="margin-top:10px;color:#555">
+
+Revise estos contratos desde el módulo de Recursos Humanos para tomar las acciones correspondientes.
+
+</p>
+
+</div>
+
+</div>
+
+<div style="background:#F5F7FA;padding:18px;text-align:center;color:#777;font-size:13px">
+
+ERP Recursos Humanos P&P © ${new Date().getFullYear()}
+
+</div>
+
+</div>
+
+</div>
+`
+
+});
+
+
+console.log(
+"✅ Resumen enviado:",
+correo,
+info.messageId
+);
+
+
+}catch(error:any){
+
+console.log(
+"❌ Error resumen contratos:",
+error.message
+);
+
+
+}
+
 
 };

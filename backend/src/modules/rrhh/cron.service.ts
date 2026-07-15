@@ -4,20 +4,33 @@ import { prisma } from "../../config/prisma";
 import {
   enviarCorreoCumpleanos,
   enviarCorreoContratoPorVencer,
-  enviarCorreoCapacitacion
+  enviarCorreoCapacitacion,
+  enviarCorreoResumenContratos
 } from "../../utils/mailer";
 
 export const iniciarCron = () => {
 
-  cron.schedule("0 8 * * *", async () => {
+cron.schedule("0 8 * * *", async () => {
+        try {
 
-    console.log("🔄 Revisando eventos...");
+      console.log("🔄 Revisando eventos...");
 
-    await revisarCumpleanos();
+      await revisarCumpleanos();
 
-    await revisarContratos();
+      await revisarContratos();
 
-    await revisarCapacitaciones();
+      await revisarCapacitaciones();
+
+      console.log("✅ Revisión terminada");
+
+    } catch(error:any){
+
+      console.log(
+        "❌ Error en cron:",
+        error.message
+      );
+
+    }
 
   });
 
@@ -26,107 +39,220 @@ const revisarCumpleanos = async () => {
 
   const hoy = new Date();
 
+
+  const diaHoy = hoy.getDate();
+  const mesHoy = hoy.getMonth();
+
+
   const empleados = await prisma.empleado.findMany();
+
+
+  console.log("Empleados encontrados:", empleados.length);
+
 
   for (const emp of empleados) {
 
-    if (!emp.email) continue;
 
-    const cumple = new Date(emp.fechaNacimiento);
+    if (!emp.email) {
+      console.log(
+        "Sin correo:",
+        emp.nombres
+      );
+      continue;
+    }
+
+
+    const fecha = new Date(emp.fechaNacimiento);
+
+
+    const diaCumple = fecha.getUTCDate();
+
+    const mesCumple = fecha.getUTCMonth();
+
+
+    console.log(
+      emp.nombres,
+      "cumple:",
+      diaCumple,
+      mesCumple,
+      "hoy:",
+      diaHoy,
+      mesHoy
+    );
+
 
     if (
+  diaCumple === diaHoy &&
+  mesCumple === mesHoy
+) {
 
-      cumple.getDate() === hoy.getDate() &&
 
-      cumple.getMonth() === hoy.getMonth()
+  // EVITAR ENVIAR VARIAS VECES EL MISMO AÑO
 
-    ) {
+  if(emp.ultimoCumpleCorreo){
 
-      await enviarCorreoCumpleanos(
 
-        emp.email,
+    const yaEnviado = 
+      emp.ultimoCumpleCorreo.getFullYear()
+      ===
+      hoy.getFullYear();
 
-        `${emp.nombres} ${emp.apellidos}`
 
+    if(yaEnviado){
+
+      console.log(
+        "⏭️ Ya enviado este año:",
+        emp.nombres
       );
 
-      console.log("🎂 Cumpleaños enviado:", emp.nombres);
+      continue;
 
     }
 
   }
 
+
+
+  await enviarCorreoCumpleanos(
+
+    emp.email,
+
+    `${emp.nombres} ${emp.apellidos}`
+
+  );
+
+  await prisma.empleado.update({
+
+    where:{
+      id: emp.id
+    },
+
+    data:{
+      ultimoCumpleCorreo: hoy
+    }
+
+  });
+
+  console.log(
+    "🎂 Cumpleaños enviado:",
+    emp.nombres
+  );
+
+
+}
+
+  }
+
+
+};
+const soloFecha = (fecha: Date) => {
+  const fechaPeru = new Date(
+    fecha.toLocaleString("en-US", {
+      timeZone: "America/Lima",
+    })
+  );
+
+  const año = fechaPeru.getFullYear();
+  const mes = String(fechaPeru.getMonth() + 1).padStart(2, "0");
+  const dia = String(fechaPeru.getDate()).padStart(2, "0");
+
+  return `${año}-${mes}-${dia}`;
+};
+
+// SOLO para fechas que vienen de la BD
+const soloFechaBD = (fecha: Date) => {
+  const año = fecha.getUTCFullYear();
+  const mes = String(fecha.getUTCMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getUTCDate()).padStart(2, "0");
+
+  return `${año}-${mes}-${dia}`;
 };
 const revisarContratos = async () => {
 
-  const config = await prisma.configuracion.findUnique({
-
-    where: {
-
-      id: 1
-
-    }
-
-  });
-
-  if (!config) return;
-
   const contratos = await prisma.contrato.findMany({
-
     include: {
-
       empleado: true
-
+    },
+    where: {
+      estado: "Activo"
     }
-
   });
 
-  const hoy = new Date();
+  // Fecha actual (Perú)
+  const hoy = soloFecha(new Date());
+
+  let alertas: string[] = [];
 
   for (const contrato of contratos) {
 
-    if (!contrato.fechaFin) continue;
+    // Fechas obtenidas desde la BD
+    const inicio = soloFechaBD(contrato.fechaInicio);
 
-    const diferencia =
+    console.log(
+      "Contrato:",
+      contrato.empleado.nombres,
+      "inicio:",
+      inicio,
+      "hoy:",
+      hoy
+    );
 
-      Math.ceil(
+    if (inicio === hoy) {
+      alertas.push(
+        `🟢 ${contrato.empleado.nombres} ${contrato.empleado.apellidos} inicia contrato hoy`
+      );
+    }
 
+    if (contrato.fechaFin) {
+
+      const fin = soloFechaBD(contrato.fechaFin);
+
+      const dias = Math.ceil(
         (
-
-          contrato.fechaFin.getTime()
-
-          -
-
-          hoy.getTime()
-
-        )
-
-        /
-
+          new Date(fin).getTime() -
+          new Date(hoy).getTime()
+        ) /
         (1000 * 60 * 60 * 24)
-
       );
 
-    if (diferencia === config.diasContrato) {
+      if (dias === 0) {
+        alertas.push(
+          `🔴 ${contrato.empleado.nombres} ${contrato.empleado.apellidos} vence contrato HOY`
+        );
+      }
 
-      await enviarCorreoContratoPorVencer(
-
-        config.correo,
-
-        `${contrato.empleado.nombres} ${contrato.empleado.apellidos}`,
-
-        contrato.fechaFin.toLocaleDateString(),
-
-        diferencia
-
-      );
-
-      console.log("📄 Contrato por vencer");
+      if (dias === 1 || dias === 2 || dias === 3) {
+        alertas.push(
+          `⚠️ ${contrato.empleado.nombres} ${contrato.empleado.apellidos} vence contrato en ${dias} días`
+        );
+      }
 
     }
 
   }
 
+  console.log(alertas);
+if (alertas.length > 0) {
+
+  const usuariosRRHH = await prisma.user.findMany({
+    where: {
+      rol: "ADMIN",
+      modulo: "RRHH"
+    }
+  });
+
+  for (const usuario of usuariosRRHH) {
+
+    if (!usuario.correo) continue;
+
+    await enviarCorreoResumenContratos(
+      usuario.correo,
+      alertas
+    );
+
+  }
+
+}
 };
 const revisarCapacitaciones = async () => {
 
@@ -160,7 +286,17 @@ const revisarCapacitaciones = async () => {
 
   });
 
-  const hoy = new Date();
+  const fechaPeru = new Date(
+  new Date().toLocaleString(
+    "en-US",
+    {
+      timeZone:"America/Lima"
+    }
+  )
+);
+
+
+const hoy = fechaPeru;
 
   for (const cap of capacitaciones) {
 

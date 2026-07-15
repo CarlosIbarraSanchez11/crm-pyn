@@ -39,6 +39,7 @@ model Empleado {
   capacitaciones EmpleadoCapacitacion[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  ultimoCumpleCorreo DateTime?
 }
 
 model Contrato {
