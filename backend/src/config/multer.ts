@@ -32,7 +32,14 @@ dir =
 "uploads/rrhh/capacitaciones";
 
 }
+if(
+req.originalUrl.includes("/asistencia")
+){
 
+dir =
+"uploads/asistencia";
+
+}
 
 
 if(!fs.existsSync(dir)){

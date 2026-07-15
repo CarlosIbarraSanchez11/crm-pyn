@@ -3,7 +3,7 @@ import cors from "cors";
 import path from "path";
 import authRoutes from "./modules/auth/auth.routes";
 import rrhhRoutes from "./modules/rrhh/rrhh.routes";
-
+import asistenciaRoutes from "./modules/asistencia/asistencia.routes";
 
 const app = express();
 /* ========================= */
@@ -18,6 +18,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use("/auth", authRoutes);
 app.use("/rrhh", rrhhRoutes);
+app.use("/asistencia", asistenciaRoutes);
+
 app.use(
   "/uploads",
   express.static(

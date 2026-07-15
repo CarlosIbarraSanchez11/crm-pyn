@@ -4,7 +4,8 @@ import LoginRRHH from "./pages/Modulos/rrhh/Login";
 import DashboardRRHH from "./pages/Modulos/rrhh/Dashboard";
 import LoginProyecto from "./pages/Modulos/proyecto/Login";
 import DashboardProyecto from "./pages/Modulos/proyecto/Dashboard";
-
+import LoginAsistencia from "./pages/Modulos/asistencia/Login";
+import DashboardAsistencia from "./pages/Modulos/asistencia/Dashboard";
 export default function App() {
   return (
     <div className="p-0 bg-gray-100 min-h-screen">
@@ -23,6 +24,9 @@ export default function App() {
         <Route path="/proyectos/login" element={<LoginProyecto />} />
         <Route path="/proyectos/dashboard" element={<DashboardProyecto />} />
         
+        {/* RUTAS DE ASISTENCIA */}
+        <Route path="/asistencia/login" element={<LoginAsistencia />} />
+        <Route path="/asistencia/dashboard" element={<DashboardAsistencia />} />
         {/* ✨ RUTA 404 (OPCIONAL: Captura cualquier ruta que no exista) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
