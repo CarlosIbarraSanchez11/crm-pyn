@@ -3,7 +3,6 @@ import { prisma } from "../../config/prisma";
 import fs from "node:fs";
 import path from "node:path";
 
-
 /* =======================
    DISTANCIA FACIAL
 ======================= */
@@ -37,10 +36,6 @@ export const registrarAsistencia = async(data:any)=>{
 
 };
 
-
-
-
-
 /* =======================
    MARCAR ASISTENCIA BIOMETRÍA
 ======================= */
@@ -49,8 +44,7 @@ export const registrarAsistencia = async(data:any)=>{
 export const marcarAsistenciaPorBiometria = async ({
   descriptor,
   latitud,
-  longitud,
-  foto
+  longitud
 }:any)=>{
 
 
@@ -170,9 +164,6 @@ if(
 }
 
 
-
-
-
 const asistencia =
 await prisma.asistencia.create({
 
@@ -194,9 +185,6 @@ data:{
  Number(longitud),
 
 
- foto,
-
-
  confianza:
  Number(
   (1-menorDistancia)*100
@@ -209,32 +197,25 @@ data:{
 });
 
 
-
-
 return {
 
+  ok: true,
 
- ok:true,
+  message:
+    `Asistencia registrada ${tipo}`,
 
+  empleado:
+    `${mejorEmpleado.nombres} ${mejorEmpleado.apellidos}`,
 
- message:
- `Asistencia registrada ${tipo}`,
+  confianza:
+    asistencia.confianza,
 
+  asistenciaId:
+    asistencia.id,
 
- empleado:
- `${mejorEmpleado.nombres} ${mejorEmpleado.apellidos}`,
-
-
- confianza:
- asistencia.confianza,
-
-
- data:asistencia
-
+  data: asistencia
 
 };
-
-
 
 }catch(error){
 
@@ -254,14 +235,9 @@ return {
  "Error registrando asistencia"
 
 };
-
-
 }
 
-
 };
-
-
 
 
 

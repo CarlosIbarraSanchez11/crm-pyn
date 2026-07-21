@@ -9,7 +9,8 @@ import {
   guardarBiometriaController,
   actualizarBiometriaController,
   eliminarBiometriaController,
-  getAsistenciasEmpleado
+  getAsistenciasEmpleado,
+  subirFotoAsistencia
 } from "./asistencia.controller";
 
 const router = Router();
@@ -46,10 +47,13 @@ router.delete(
 
 router.post(
   "/marcar",
-  upload.single("foto"),
   marcarAsistencia
 );
-
+router.post(
+  "/subir-foto",
+  upload.single("foto"),
+  subirFotoAsistencia
+);
 router.get(
   "/dashboard",
   dashboardAsistencia

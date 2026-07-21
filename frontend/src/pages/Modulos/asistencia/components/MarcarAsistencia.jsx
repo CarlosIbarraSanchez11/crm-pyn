@@ -14,7 +14,8 @@ export default function RegistroAsistencia() {
   const [camaraActiva, setCamaraActiva] = useState(false);
   const [rostroReconocido, setRostroReconocido] = useState(false);
   const [loading, setLoading] = useState(false);
-
+  const [pedirFoto, setPedirFoto] = useState(false);
+  const [asistenciaId, setAsistenciaId] = useState(null);
   /* =======================
      CARGA MODELOS (IGUAL QUE BIOMETRÍA)
   ======================= */
@@ -98,75 +99,99 @@ const capturarFoto = () => {
      RECONOCIMIENTO + ASISTENCIA
   ======================= */
   const iniciarReconocimiento = async () => {
-    try {
-      if (!modelosListos) {
-        alert("Espera, modelos aún cargando...");
-        return;
-      }
-
-      setLoading(true);
-
-      const video = document.getElementById("videoAsistencia");
-
-      const detections = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceLandmarks()
-        .withFaceDescriptor();
-
-      if (!detections) {
-        alert("No se detectó rostro");
-        setLoading(false);
-        return;
-      }
-      const foto = await capturarFoto();
-      const descriptor = Array.from(detections.descriptor);
-
-      const position = await obtenerUbicacion();
-
-      const formData = new FormData();
-
-formData.append(
-  "descriptor",
-  JSON.stringify(descriptor)
-);
-
-formData.append(
-  "latitud",
-  position.coords.latitude
-);
-
-formData.append(
-  "longitud",
-  position.coords.longitude
-);
-
-if (foto) {
-  formData.append(
-    "foto",
-    foto,
-    "asistencia.jpg"
-  );
-}
-const res = await api.post(
-  "/asistencia/marcar",
-  formData
-);
-
-      if (res.data.ok) {
-        setRostroReconocido(true);
-        alert(`Asistencia registrada: ${res.data.empleado}`);
-      } else {
-        alert(res.data.message);
-      }
-
-      setLoading(false);
-
-    } catch (error) {
-      console.error(error);
-      setLoading(false);
+  try {
+    if (!modelosListos) {
+      alert("Espera, modelos aún cargando...");
+      return;
     }
-  };
 
+    setLoading(true);
+
+    const video = document.getElementById("videoAsistencia");
+
+    const detections = await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+
+    if (!detections) {
+      alert("No se detectó rostro");
+      setLoading(false);
+      return;
+    }
+
+    // Descriptor del rostro
+    const descriptor = Array.from(detections.descriptor);
+
+    // Ubicación actual
+    const position = await obtenerUbicacion();
+
+    // Registrar asistencia (SIN FOTO)
+    const res = await api.post(
+      "/asistencia/marcar",
+      {
+        descriptor,
+        latitud: position.coords.latitude,
+        longitud: position.coords.longitude,
+      }
+    );
+
+    if (res.data.ok) {
+      setRostroReconocido(true);
+
+      // Guardar ID de asistencia
+      setAsistenciaId(res.data.asistenciaId);
+
+      // Mostrar botón para foto con implementos
+      setPedirFoto(true);
+
+      alert(
+        `Asistencia registrada: ${res.data.empleado}\\n\\nAhora tómate una foto con tus implementos de seguridad.`
+      );
+    } else {
+      alert(res.data.message);
+    }
+
+    setLoading(false);
+
+  } catch (error) {
+    console.error(error);
+    alert("Error al registrar asistencia");
+    setLoading(false);
+  }
+};
+const tomarFotoImplementos = async () => {
+  try {
+
+    const foto = await capturarFoto();
+
+    const formData = new FormData();
+
+    formData.append(
+      "foto",
+      foto,
+      "implementos.jpg"
+    );
+
+    formData.append(
+      "asistenciaId",
+  String(asistenciaId)
+    );
+
+    await api.post(
+      "/asistencia/subir-foto",
+      formData
+    );
+
+    alert("Foto con implementos guardada correctamente");
+
+    setPedirFoto(false);
+
+  } catch (error) {
+    console.error(error);
+    alert("Error al guardar foto");
+  }
+};
   return (
     <div className="space-y-8">
 
@@ -232,23 +257,41 @@ const res = await api.post(
       {/* BOTONES */}
       <div className="flex justify-center gap-4">
 
-        <button
-          onClick={activarCamara}
-          className="px-10 py-4 rounded-2xl bg-[#F5B300] text-black font-bold"
-        >
-          Activar cámara
-        </button>
+<button
+  onClick={activarCamara}
+  className="px-10 py-4 rounded-2xl bg-[#F5B300] text-black font-bold"
+>
+ Activar cámara
+</button>
 
-        <button
-          onClick={iniciarReconocimiento}
-          disabled={loading}
-          className="px-10 py-4 rounded-2xl bg-green-600 text-white font-bold"
-        >
-          {loading ? "Procesando..." : "Registrar asistencia"}
-        </button>
 
-      </div>
+{!pedirFoto && (
+<button
+  onClick={iniciarReconocimiento}
+  disabled={loading}
+  className="px-10 py-4 rounded-2xl bg-green-600 text-white font-bold"
+>
+  {
+    loading
+    ? "Validando..."
+    : "Registrar asistencia"
+  }
+</button>
+)}
 
+
+{pedirFoto && (
+
+<button
+onClick={tomarFotoImplementos}
+className="px-10 py-4 rounded-2xl bg-blue-600 text-white font-bold"
+>
+📸 Tomar foto con implementos
+</button>
+
+)}
+
+</div>
     </div>
   );
 }
