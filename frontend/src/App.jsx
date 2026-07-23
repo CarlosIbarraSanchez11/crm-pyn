@@ -4,10 +4,6 @@ import LoginRRHH from "./pages/Modulos/rrhh/Login";
 import DashboardRRHH from "./pages/Modulos/rrhh/Dashboard";
 import LoginProyecto from "./pages/Modulos/proyecto/Login";
 import DashboardProyecto from "./pages/Modulos/proyecto/Dashboard";
-import LoginMantenimiento from "./pages/Modulos/mantenimiento/Login";
-import DashboardMantenimiento from "./pages/Modulos/mantenimiento/Dashboard";
-import LoginAdministracion from "./pages/Modulos/administracion/Login";
-import DashboardAdministracion from "./pages/Modulos/administracion/Dashboard";
 
 export default function App() {
   return (
@@ -31,6 +27,9 @@ export default function App() {
         <Route path="/administracion/login" element={<LoginAdministracion />} />
         <Route path="/administracion/dashboard" element={<DashboardAdministracion />} />
         
+        {/* RUTAS DE ASISTENCIA */}
+        <Route path="/asistencia/login" element={<LoginAsistencia />} />
+        <Route path="/asistencia/dashboard" element={<DashboardAsistencia />} />
         {/* ✨ RUTA 404 (OPCIONAL: Captura cualquier ruta que no exista) */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

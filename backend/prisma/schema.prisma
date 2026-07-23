@@ -60,6 +60,7 @@ model Empleado {
   createdAt          DateTime               @default(now())
   updatedAt          DateTime               @updatedAt
   ultimoCumpleCorreo DateTime?
+  asistencias Asistencia[] 
 }
 
 model Contrato {
@@ -122,6 +123,38 @@ model Configuracion {
   chatId           String?
   diasContrato     Int
   diasCapacitacion Int
+}
+
+model Asistencia {
+
+  id Int @id @default(autoincrement())
+
+  empleadoId Int
+  empleado Empleado @relation(fields:[empleadoId], references:[id])
+
+  tipo TipoAsistencia
+
+  fecha DateTime @default(now())
+
+  latitud Float?
+
+  longitud Float?
+
+  foto String?        // foto del momento
+
+  confianza Float?    // porcentaje de reconocimiento
+
+  observacion String?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+}
+
+enum TipoAsistencia {
+  ENTRADA
+  SALIDA
 }
 
 model Zonal {

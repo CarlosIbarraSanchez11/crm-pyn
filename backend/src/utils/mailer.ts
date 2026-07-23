@@ -441,6 +441,257 @@ error.message
 
 
 };
+export const enviarCorreoAsistencia = async (
+  correo: string,
+  data: any
+) => {
+
+try {
+
+
+const info = await transporter.sendMail({
+
+from:
+`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+to: correo,
+
+subject:"📍 Registro de asistencia",
+
+
+html:`
+
+<div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+
+<div style="
+max-width:700px;
+margin:auto;
+background:#fff;
+border-radius:18px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,.08)
+">
+
+
+<!-- HEADER -->
+
+<div style="
+background:rgb(23,37,76);
+padding:30px;
+">
+
+<h1 style="
+margin:0;
+color:#fff;
+text-align:center;
+">
+
+Registro de Asistencia
+
+</h1>
+
+
+<p style="
+margin-top:8px;
+color:#D7DCEA;
+text-align:center;
+">
+
+Área de Recursos Humanos
+
+</p>
+
+
+</div>
+
+
+
+<!-- CONTENIDO -->
+
+<div style="padding:35px">
+
+
+<p style="
+font-size:16px;
+color:#555;
+">
+
+Se ha registrado una nueva asistencia en el sistema.
+
+</p>
+
+
+
+<div style="
+background:#FAFAFA;
+border-left:6px solid rgb(243,146,0);
+padding:20px;
+margin-top:20px;
+border-radius:10px;
+font-size:15px;
+line-height:26px;
+color:#333;
+">
+
+
+<p>
+<b>Empleado:</b> ${data.empleado}
+</p>
+
+
+<p>
+<b>Tipo:</b> ${data.tipo}
+</p>
+
+
+<p>
+<b>Fecha:</b> ${data.fecha}
+</p>
+
+
+<p>
+<b>Hora:</b> ${data.hora}
+</p>
+
+
+<p>
+<b>Latitud:</b> ${data.latitud}
+</p>
+
+
+<p>
+<b>Longitud:</b> ${data.longitud}
+</p>
+
+
+</div>
+
+
+
+
+<div style="
+margin-top:30px;
+padding:20px;
+background:#FFF8ED;
+border-radius:10px;
+text-align:center;
+">
+
+
+<h3 style="
+color:rgb(23,37,76);
+">
+
+📸 Foto evidencia
+
+</h3>
+
+
+
+${
+data.foto
+?
+`
+<img 
+src="cid:fotoAsistencia"
+style="
+width:300px;
+border-radius:12px;
+margin-top:15px;
+"
+/>
+`
+:
+`
+<p style="color:#777">
+No se adjuntó foto de evidencia.
+</p>
+`
+}
+
+
+
+</div>
+
+
+
+</div>
+
+
+
+<!-- FOOTER -->
+
+<div style="
+background:#F5F7FA;
+padding:18px;
+text-align:center;
+color:#777;
+font-size:13px;
+">
+
+ERP Recursos Humanos P&P © ${new Date().getFullYear()}
+
+</div>
+
+
+
+</div>
+
+</div>
+
+`,
+
+
+
+attachments:
+data.foto
+?
+[
+{
+filename:"evidencia.jpg",
+
+path:data.foto,
+
+cid:"fotoAsistencia",
+
+contentType:"image/jpeg"
+
+}
+]
+:
+[]
+
+
+});
+
+
+
+console.log(
+"✅ Correo asistencia enviado:",
+correo,
+info.messageId
+);
+
+
+
+return true;
+
+
+}catch(error:any){
+
+
+console.log(
+"❌ Error correo asistencia:",
+error.message
+);
+
+
+return false;
+
+
+}
+
+};
 
 // Notificacion  A JM
 export const enviarNotificacionJM = async (

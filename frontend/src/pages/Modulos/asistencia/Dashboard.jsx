@@ -5,10 +5,9 @@ import { useNavigate } from "react-router-dom";
 
 import SidebarAsistencia from "./components/SidebarAsistencia";
 import InicioAsistencia from "./components/InicioAsistencia";
-import RegistroAsistencia from "./components/RegistroAsistencia";
-import UsuariosBiometria from "./components/UsuariosBiometria";
+import MarcarAsistencia from "./components/MarcarAsistencia";
+import GestionBiometria from "./components/GestionBiometria";
 import ReportesAsistencia from "./components/ReportesAsistencia";
-
 
 export default function DashboardAsistencia() {
   const navigate = useNavigate();
@@ -28,7 +27,7 @@ export default function DashboardAsistencia() {
 
   return (
     <div className="min-h-screen flex bg-[#f5f7fb]">
-      {/* SIDEBAR */}
+
       <SidebarAsistencia
         menuActivo={menuActivo}
         setMenuActivo={setMenuActivo}
@@ -36,18 +35,18 @@ export default function DashboardAsistencia() {
         usuario={usuario}
       />
 
-      {/* CONTENIDO */}
       <main className="flex-1 overflow-auto p-8">
+
         {menuActivo === "inicio" && (
           <InicioAsistencia usuario={usuario} />
         )}
 
-        {menuActivo === "asistencia" && (
-          <RegistroAsistencia usuario={usuario} />
+        {menuActivo === "marcar" && (
+          <MarcarAsistencia usuario={usuario} />
         )}
 
         {menuActivo === "biometria" && (
-          <UsuariosBiometria usuario={usuario} />
+          <GestionBiometria usuario={usuario} />
         )}
 
         {menuActivo === "reportes" && (
@@ -55,6 +54,7 @@ export default function DashboardAsistencia() {
         )}
 
       </main>
+
     </div>
   );
 }
