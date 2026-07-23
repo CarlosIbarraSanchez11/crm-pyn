@@ -33,14 +33,13 @@ dir =
 
 }
 
+if (req.originalUrl.includes("/incidencias")) {
+    dir = "uploads/mantenimiento/incidencias";
+}
 
 
-if(!fs.existsSync(dir)){
-
-fs.mkdirSync(dir,{
-recursive:true
-});
-
+if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
 }
 
 

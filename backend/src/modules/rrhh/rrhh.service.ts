@@ -231,8 +231,7 @@ descripcion:data.descripcion,
 
 
 // AQUÍ CAMBIA
-evidencia:data.evidencia || null,
-
+evidencia: null,
 
 
 empleados:{
@@ -547,5 +546,24 @@ diasCapacitacion:Number(data.diasCapacitacion)
 
 });
 
+
+};
+
+export const subirEvidenciaCapacitacionService = async (
+  id: number,
+  evidencia: string
+) => {
+
+  return await prisma.capacitacion.update({
+
+    where: {
+      id
+    },
+
+    data: {
+      evidencia
+    }
+
+  });
 
 };

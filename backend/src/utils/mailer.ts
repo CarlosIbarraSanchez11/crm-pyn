@@ -1,0 +1,556 @@
+import nodemailer from "nodemailer";
+import dotenv from "dotenv"; 
+
+dotenv.config();
+
+// Imprimimos en consola para asegurarnos de que está leyendo tus credenciales
+console.log("🛠 CONFIGURACIÓN SMTP CARGADA:", {
+  host: process.env.SMTP_HOST,
+  port: process.env.SMTP_PORT,
+  user: process.env.SMTP_USER
+});
+
+const transporter = nodemailer.createTransport({
+  host: process.env.SMTP_HOST,
+  port: Number(process.env.SMTP_PORT),
+  secure: Number(process.env.SMTP_PORT) === 465,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false,
+  },
+});
+
+export const enviarCorreoCumpleanos = async (
+  email: string,
+  nombre: string
+) => {
+
+  try {
+
+    const info = await transporter.sendMail({
+
+      from: `"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+      to: email,
+
+      subject: "🎉 ¡Feliz cumpleaños!",
+
+      html: `
+        <div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+
+        <div style="max-width:650px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+
+            <div style="background:rgb(23,37,76);padding:30px;text-align:center">
+
+            <h1 style="color:#fff;margin:0">
+                Recursos Humanos
+            </h1>
+
+            </div>
+
+            <div style="padding:40px;text-align:center">
+
+            <div style="font-size:70px">
+                🎉
+            </div>
+
+            <h2 style="color:rgb(23,37,76);margin-bottom:10px">
+                ¡Feliz cumpleaños!
+            </h2>
+
+            <h1 style="color:rgb(243,146,0);margin-top:0">
+                ${nombre}
+            </h1>
+
+            <p style="color:#555;font-size:16px;line-height:28px">
+
+                Todo el equipo de <b>P&P</b> te desea un día lleno de
+                alegría, salud y muchos éxitos.
+
+            </p>
+
+            <div style="margin-top:35px;background:#FFF8ED;border-left:6px solid rgb(243,146,0);padding:18px;border-radius:10px">
+
+                🎂 Que este nuevo año de vida esté lleno de oportunidades,
+                crecimiento profesional y grandes momentos.
+
+            </div>
+
+            </div>
+
+            <div style="background:#F5F7FA;padding:18px;text-align:center;color:#777;font-size:13px">
+
+            ERP Recursos Humanos P&P
+
+            </div>
+
+        </div>
+
+        </div>
+        `
+
+    });
+
+
+    console.log("✅ Cumpleaños enviado");
+    console.log("📧 Destino:", email);
+    console.log("🆔 ID:", info.messageId);
+
+
+    return true;
+
+
+  } catch(error:any) {
+
+
+    console.log(
+      "❌ Error cumpleaños:",
+      error.message
+    );
+
+
+    return false;
+
+  }
+
+};
+
+export const enviarCorreoContratoNuevo = async (
+
+  correoRRHH:string,
+
+  empleado:string,
+
+  tipo:string,
+
+  inicio:string,
+
+  fin:string
+
+)=>{
+
+  await transporter.sendMail({
+
+    from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+    to:correoRRHH,
+
+    subject:"📄 Nuevo contrato registrado",
+
+    html:`
+
+      <h2>Nuevo contrato</h2>
+
+      <p><b>Empleado:</b> ${empleado}</p>
+
+      <p><b>Tipo:</b> ${tipo}</p>
+
+      <p><b>Inicio:</b> ${inicio}</p>
+
+      <p><b>Fin:</b> ${fin}</p>
+
+    `
+
+  });
+
+};
+export const enviarCorreoContratoPorVencer = async(
+
+  correoRRHH:string,
+  empleado:string,
+  fechaFin:string,
+  dias:number
+
+)=>{
+
+  try{
+
+
+    const info = await transporter.sendMail({
+
+      from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+      to:correoRRHH,
+
+      subject:"⚠ Contrato por vencer",
+
+      html:`
+
+        <h2>Contrato próximo a vencer</h2>
+
+        <p>
+        El contrato del trabajador
+        <b>${empleado}</b>
+        vence el
+        <b>${fechaFin}</b>
+        </p>
+
+        <p>
+        Restan
+        <b>${dias} días</b>
+        </p>
+
+      `
+
+    });
+
+
+    console.log("✅ Contrato por vencer enviado");
+    console.log("🆔 ID:",info.messageId);
+
+
+    return true;
+
+
+  }catch(error:any){
+
+
+    console.log(
+      "❌ Error contrato por vencer:",
+      error.message
+    );
+
+
+    return false;
+
+  }
+
+};
+export const enviarCorreoCapacitacion = async(
+
+  email:string,
+
+  nombre:string,
+
+  capacitacion:string,
+
+  fecha:string,
+
+  hora:string
+
+)=>{
+
+  await transporter.sendMail({
+
+    from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+    to:email,
+
+    subject:"📚 Recordatorio de capacitación",
+
+    html:`
+
+      <h2>Capacitación programada</h2>
+
+      <p>
+
+      Hola ${nombre}
+
+      </p>
+
+      <p>
+
+      Tiene una capacitación programada.
+
+      </p>
+
+      <p>
+
+      <b>${capacitacion}</b>
+
+      </p>
+
+      <p>
+
+      Fecha: ${fecha}
+
+      </p>
+
+      <p>
+
+      Hora: ${hora}
+
+      </p>
+
+    `
+
+  });
+
+};
+export const enviarCorreoContratoVencido = async (
+
+  correoRRHH:string,
+
+  empleado:string,
+
+  fecha:string
+
+)=>{
+
+  try{
+
+    await transporter.sendMail({
+
+      from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+      to:correoRRHH,
+
+      subject:"🚨 Contrato vencido",
+
+      html:`
+
+        <h2>Contrato vencido</h2>
+
+        <p>
+
+        El contrato del trabajador
+
+        <b>${empleado}</b>
+
+        venció el
+
+        <b>${fecha}</b>
+
+        </p>
+
+      `
+
+    });
+
+  }catch(error:any){
+
+    console.log(error.message);
+
+  }
+
+};
+export const enviarCorreoResumenContratos = async (
+
+  correo:string,
+
+  alertas:string[]
+
+)=>{
+
+try{
+
+
+const info = await transporter.sendMail({
+
+from:`"RRHH P&P" <${process.env.SMTP_USER}>`,
+
+to:correo,
+
+subject:"📄 Resumen de contratos RRHH",
+
+html: `
+<div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+
+<div style="max-width:700px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+
+<div style="background:rgb(23,37,76);padding:30px">
+
+<h1 style="margin:0;color:#fff;text-align:center">
+
+Resumen de Contratos
+
+</h1>
+
+<p style="margin-top:8px;color:#D7DCEA;text-align:center">
+
+Área de Recursos Humanos
+
+</p>
+
+</div>
+
+<div style="padding:35px">
+
+<p style="font-size:16px;color:#555">
+
+Se detectaron las siguientes alertas:
+
+</p>
+
+${alertas.map(a=>`
+
+<div style="background:#FAFAFA;
+border-left:6px solid rgb(243,146,0);
+padding:18px;
+margin-bottom:15px;
+border-radius:10px;
+font-size:15px;
+line-height:24px;
+color:#333">
+
+${a}
+
+</div>
+
+`).join("")}
+
+<div style="margin-top:30px;padding:20px;background:#FFF8ED;border-radius:10px">
+
+<b style="color:rgb(23,37,76)">
+Importante
+</b>
+
+<p style="margin-top:10px;color:#555">
+
+Revise estos contratos desde el módulo de Recursos Humanos para tomar las acciones correspondientes.
+
+</p>
+
+</div>
+
+</div>
+
+<div style="background:#F5F7FA;padding:18px;text-align:center;color:#777;font-size:13px">
+
+ERP Recursos Humanos P&P © ${new Date().getFullYear()}
+
+</div>
+
+</div>
+
+</div>
+`
+
+});
+
+
+console.log(
+"✅ Resumen enviado:",
+correo,
+info.messageId
+);
+
+
+}catch(error:any){
+
+console.log(
+"❌ Error resumen contratos:",
+error.message
+);
+
+
+}
+
+
+};
+
+// Notificacion  A JM
+export const enviarNotificacionJM = async (
+  emailJM: string,
+  incidencia: any,
+  nombreST: string
+) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"Gestión de Mantenimiento" <${process.env.SMTP_USER}>`,
+      to: emailJM,
+      subject: `🚨 Nueva Avería Pendiente: ${incidencia.codigo}`,
+      html: `
+        <div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+          <div style="max-width:650px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+            
+            <div style="background:rgb(23,37,76);padding:30px;text-align:center">
+              <h1 style="color:#fff;margin:0">
+                Mantenimiento
+              </h1>
+              <p style="margin-top:8px;color:#D7DCEA;text-align:center">
+                Validación de Avería Requerida
+              </p>
+            </div>
+
+            <div style="padding:40px">
+              <h2 style="color:rgb(23,37,76);margin-top:0">
+                Hola, Jefe de Mantenimiento
+              </h2>
+
+              <p style="color:#555;font-size:16px;line-height:28px">
+                El supervisor <b>${nombreST}</b> ha registrado una nueva avería en el sistema que requiere tu revisión.
+              </p>
+
+              <div style="margin-top:25px;background:#FAFAFA;border-left:6px solid rgb(243,146,0);padding:20px;border-radius:10px;font-size:15px;line-height:26px;color:#333">
+                <b>Código de Ticket:</b> ${incidencia.codigo}<br>
+                <b>Sistema:</b> ${incidencia.sistema}<br>
+                <b>Dispositivo:</b> ${incidencia.dispositivo}<br>
+                <b>Descripción:</b> ${incidencia.descripcion || 'Sin descripción detallada'}
+              </div>
+
+              <div style="margin-top:30px;padding:20px;background:#FFF8ED;border-radius:10px">
+                <b style="color:rgb(23,37,76)">Siguiente paso</b>
+                <p style="margin-top:10px;color:#555">
+                  Ingresa al módulo de Mantenimiento para validar la información, ampliar los detalles técnicos (Marca/Modelo) y derivar este ticket a la contrata correspondiente.
+                </p>
+              </div>
+            </div>
+
+            <div style="background:#F5F7FA;padding:18px;text-align:center;color:#777;font-size:13px">
+              ERP Mantenimiento P&P © ${new Date().getFullYear()}
+            </div>
+
+          </div>
+        </div>
+      `
+    });
+
+    console.log("✅ Notificación a JM enviada");
+    console.log("📧 Destino:", emailJM);
+    console.log("🆔 ID:", info.messageId);
+
+    return true;
+
+  } catch (error: any) {
+    console.log("❌ Error notificación a JM:", error.message);
+    return false;
+  }
+};
+
+export const enviarNotificacionContrata = async (
+  email: string,
+  nombreContrata: string,
+  ticketInfo: any
+) => {
+  try {
+    const info = await transporter.sendMail({
+      from: `"Mantenimiento P&P" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `🛠️ Nueva Avería Asignada - Ticket: ${ticketInfo.codigo}`,
+      html: `
+        <div style="background:#f4f7fb;padding:40px;font-family:Segoe UI,Arial,sans-serif">
+          <div style="max-width:650px;margin:auto;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.08)">
+            <div style="background:rgb(23,37,76);padding:30px;text-align:center">
+              <h1 style="color:#fff;margin:0">Mantenimiento P&P</h1>
+            </div>
+            <div style="padding:40px;text-align:center">
+              <h2 style="color:rgb(23,37,76);margin-bottom:10px">¡Hola, ${nombreContrata}!</h2>
+              <p style="color:#555;font-size:16px;line-height:28px">
+                Se les ha asignado una nueva avería para su revisión y cotización.
+              </p>
+              
+              <div style="margin-top:20px;background:#FFF8ED;border-left:6px solid rgb(243,146,0);padding:18px;border-radius:10px;text-align:left;">
+                <p><b>Ticket:</b> ${ticketInfo.codigo}</p>
+                <p><b>Equipo:</b> ${ticketInfo.sistema} - ${ticketInfo.dispositivo}</p>
+                <p><b>Descripción:</b> ${ticketInfo.descripcion || 'Sin descripción adicional'}</p>
+              </div>
+
+              <p style="color:#555;font-size:16px;margin-top:20px;">
+                Por favor, ingresen a la plataforma para subir su cotización (PDF/Excel) o pónganse en contacto con el administrador.
+              </p>
+            </div>
+          </div>
+        </div>
+      `
+    });
+    console.log("✅ Correo enviado a la contrata:", email);
+    return true;
+  } catch (error: any) {
+    console.log("❌ Error enviando correo a contrata:", error.message);
+    return false;
+  }
+};

@@ -8,132 +8,284 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
-  nombre   String
-  correo   String @unique
-  password String
-  rol String
-  permisos UserPermiso[]
+  id         Int       @id @default(autoincrement())
+  nombre     String
+  correo     String    @unique
+  password   String
+  rol        String
+  modulo     String
+  estado     Boolean   @default(true)
+  sedeId     Int?
+  sede       Sede?     @relation(fields: [sedeId], references: [id])
+  contrataId Int?
+  contrata   Contrata? @relation(fields: [contrataId], references: [id])
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+}
+
+model Contrata {
+  id          Int     @id @default(autoincrement())
+  ruc         String  @unique
+  razonSocial String
+  contacto    String?
+  telefono    String?
+  correo      String?
+  direccion   String?
+  estado      Boolean @default(true)
+  usuarios    User[]
+  incidencias Incidencia[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-model Modulo {
-  id Int @id @default(autoincrement())
-  nombre String @unique
-  permisos Permiso[]
-}
-
-model Permiso {
-  id Int @id @default(autoincrement())
-  nombre String
-  moduloId Int
-  modulo Modulo @relation(fields: [moduloId], references: [id])
-  acciones PermisoAccion[]
-  usuarios UserPermiso[]
-}
-
-model UserPermiso {
-  userId Int
-  permisoId Int
-  user User @relation(fields: [userId], references: [id])
-  permiso Permiso @relation(fields: [permisoId], references: [id])
-  @@id([userId, permisoId])
-}
-
-model Accion {
-  id Int @id @default(autoincrement())
-  nombre String @unique
-  permisos PermisoAccion[]
-}
-
-model PermisoAccion {
-  permisoId Int
-  accionId Int
-  permiso Permiso @relation(fields: [permisoId], references: [id])
-  accion Accion @relation(fields: [accionId], references: [id])
-  @@id([permisoId, accionId])
-}
 model Empleado {
-  id Int @id @default(autoincrement())
-  dni String @unique
-  nombres   String
-  apellidos String
-  fechaNacimiento DateTime
-  email     String?
-  telefono  String?
-  direccion String?
-  cargo        String
-  departamento String
-  empresa      String
-  // BIOMETRÍA
-  fotoPerfil String?
-  descriptor Json?
-  estado String
-  contratos Contrato[]
-  ssoma     SSOMA?
-  capacitaciones EmpleadoCapacitacion[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                 Int                    @id @default(autoincrement())
+  dni                String                 @unique
+  nombres            String
+  apellidos          String
+  fechaNacimiento    DateTime
+  email              String?
+  telefono           String?
+  direccion          String?
+  cargo              String
+  departamento       String
+  empresa            String
+  fotoPerfil         String?
+  descriptor         Json?
+  estado             String
+  contratos          Contrato[]
+  ssoma              SSOMA?
+  capacitaciones     EmpleadoCapacitacion[]
+  createdAt          DateTime               @default(now())
+  updatedAt          DateTime               @updatedAt
+  ultimoCumpleCorreo DateTime?
 }
 
 model Contrato {
-  id Int @id @default(autoincrement())
-  empleadoId Int
-  empleado Empleado @relation(fields: [empleadoId], references: [id])
-  tipo String
-  fechaInicio DateTime @db.Date
-  fechaFin DateTime? @db.Date
-  salario Decimal? @db.Decimal(10,2)
+  id          Int       @id @default(autoincrement())
+  empleadoId  Int
+  empleado    Empleado  @relation(fields: [empleadoId], references: [id])
+  tipo        String
+  fechaInicio DateTime  @db.Date
+  fechaFin    DateTime? @db.Date
+  salario     Decimal?  @db.Decimal(10, 2)
   descripcion String?
-  estado String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  estado      String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model SSOMA {
-  id Int @id @default(autoincrement())
-  empleadoId Int      @unique
-  empleado   Empleado @relation(fields: [empleadoId], references: [id])
-  emoInicio DateTime? @db.Date
-  emoFin    DateTime? @db.Date
-  alturaInicio DateTime? @db.Date
-  alturaFin    DateTime? @db.Date
-  sstInicio DateTime? @db.Date
-  sstFin    DateTime? @db.Date
+  id                Int       @id @default(autoincrement())
+  empleadoId        Int       @unique
+  empleado          Empleado  @relation(fields: [empleadoId], references: [id])
+  emoInicio         DateTime? @db.Date
+  emoFin            DateTime? @db.Date
+  alturaInicio      DateTime? @db.Date
+  alturaFin         DateTime? @db.Date
+  sstInicio         DateTime? @db.Date
+  sstFin            DateTime? @db.Date
   patrimonialInicio DateTime? @db.Date
   patrimonialFin    DateTime? @db.Date
 }
 
 model Capacitacion {
-  id Int @id @default(autoincrement())
-  nombre String
-  fecha DateTime @db.Date
-  hora String
-  duracion Int?
+  id          Int                    @id @default(autoincrement())
+  nombre      String
+  fecha       DateTime               @db.Date
+  hora        String
+  duracion    Int?
   institucion String?
-  estado String
+  estado      String
   descripcion String?
-  evidencia String?
-  empleados EmpleadoCapacitacion[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  evidencia   String?
+  empleados   EmpleadoCapacitacion[]
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
 }
 
 model EmpleadoCapacitacion {
   empleadoId     Int
   capacitacionId Int
-  empleado     Empleado     @relation(fields: [empleadoId], references: [id])
-  capacitacion Capacitacion @relation(fields: [capacitacionId], references: [id])
+  empleado       Empleado     @relation(fields: [empleadoId], references: [id])
+  capacitacion   Capacitacion @relation(fields: [capacitacionId], references: [id])
+
   @@id([empleadoId, capacitacionId])
 }
 
 model Configuracion {
-  id Int @id @default(1)
-  empresa String
-  correo String
-  telegramToken String?
-  chatId String?
-  diasContrato Int
+  id               Int     @id @default(1)
+  empresa          String
+  correo           String
+  telegramToken    String?
+  chatId           String?
+  diasContrato     Int
   diasCapacitacion Int
+}
+
+model Zonal {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  estado    Boolean  @default(true)
+  sedes     Sede[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Sede {
+  id         Int        @id @default(autoincrement())
+  nombre     String
+  estado     Boolean    @default(true)
+  zonalId    Int
+  zonal      Zonal      @relation(fields: [zonalId], references: [id], onDelete: Cascade)
+  pabellones Pabellon[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  usuarios   User[]
+
+  @@unique([nombre, zonalId])
+}
+
+model Pabellon {
+  id        Int      @id @default(autoincrement())
+  nombre    String
+  estado    Boolean  @default(true)
+  sedeId    Int
+  sede      Sede     @relation(fields: [sedeId], references: [id], onDelete: Cascade)
+  pisos     Piso[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([nombre, sedeId])
+}
+
+model Piso {
+  id         Int        @id @default(autoincrement())
+  nombre     String
+  estado     Boolean    @default(true)
+  pabellonId Int
+  pabellon   Pabellon   @relation(fields: [pabellonId], references: [id], onDelete: Cascade)
+  ambientes  Ambiente[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@unique([nombre, pabellonId])
+}
+
+model Ambiente {
+  id        Int        @id @default(autoincrement())
+  nombre    String
+  estado    Boolean    @default(true)
+  pisoId    Int
+  piso      Piso       @relation(fields: [pisoId], references: [id], onDelete: Cascade)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  activos   Activo[]
+  proyectos Proyecto[]
+
+  @@unique([nombre, pisoId])
+}
+
+model Activo {
+  id            Int      @id @default(autoincrement())
+  codInventario String   @unique
+  sistema       String
+  dispositivo   String
+  marca         String
+  modelo        String
+  serie         String?
+  lote          String?
+  estado        String   @default("OPERATIVO")
+  ambienteId    Int
+  ambiente      Ambiente @relation(fields: [ambienteId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Incidencia {
+  id          Int     @id @default(autoincrement())
+  codigo      String  @unique // Para generar un ticket tipo: INC-0001
+  descripcion String? // Un texto breve de lo que falló
+
+  // Ubicación exacta (Lo que jalarás de tu módulo de ubicaciones)
+  sedeId     Int
+  pabellonId Int
+  pisoId     Int
+  ambienteId Int
+
+  // Datos Técnicos Básicos (Obligatorios para ST)
+  sistema     String // Ej: Eléctrico, Sanitario, Infraestructura
+  dispositivo String // Ej: Foco, Inodoro, Puerta
+
+  // Datos Técnicos Específicos (Opcionales para ST, el JM los llena después)
+  marca  String?
+  modelo String?
+
+  // Evidencia
+  fotoUrl String? // Ruta de la imagen subida
+
+  // Control de flujo
+  estado String @default("PENDIENTE_JM") // Arranca pendiente de revisión por el Jefe de Mantenimiento
+
+  contrataId  Int?     // Campo opcional u obligatorio según requieras
+  contrata    Contrata? @relation(fields: [contrataId], references: [id])
+
+  creadoPorId Int // El ID del ST que registró esto
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum TipoProyecto {
+  OPEX
+  CAPEX
+}
+
+enum EstadoProyecto {
+  oportunidad
+  pendiente
+  progreso
+  revision
+  completado
+  ejecucion
+  cancelado
+}
+
+model Proyecto {
+  id                    Int             @id @default(autoincrement())
+  numeroSolicitante     String          @unique // Ej: SOL-2026-001
+  numeroProyectoCliente String?         
+  numeroProyectoInterno String?
+
+  cliente               String
+  nombreProyecto        String
+  tipoProyecto          TipoProyecto
+
+  // Relación con la Ubicación (Esto trae Zonal, Sede, Pabellón, Piso)
+  ambienteId            Int
+  ambiente              Ambiente        @relation(fields: [ambienteId], references: [id])
+
+  // Datos Técnicos
+  sistema               String?
+  dispositivo           String?
+  marca                 String?
+  modelo                String?
+  foto                  String?         // URL de la foto (si aplica)
+  archivoPdf            String?         // 🔥 NUEVO: URL del PDF subido
+  presupuestoEstimado   Decimal?        @db.Decimal(12, 2)
+  montoReferencial      Decimal?         @db.Decimal(12, 2)
+
+  // Seguimiento
+  estado                EstadoProyecto  @default(oportunidad)
+  descripcion           String?         @db.Text
+  gastoEquipos          Decimal? @db.Decimal(12, 2)
+  gastoMateriales       Decimal? @db.Decimal(12, 2)
+  gastoManoObra         Decimal? @db.Decimal(12, 2)
+  gastosAdministrativos Decimal? @db.Decimal(12, 2)
+  costoCliente          Decimal? @db.Decimal(12, 2) // Lo que se le cobra al cliente final
+  margen                Decimal? @db.Decimal(5, 2)  // Porcentaje de margen (%)
+
+  createdAt             DateTime        @default(now())
+  updatedAt             DateTime        @updatedAt
 }

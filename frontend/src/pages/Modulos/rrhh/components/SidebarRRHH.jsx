@@ -165,12 +165,6 @@ export default function SidebarRRHH({
             label="SSOMA"
           />
 
-          <MenuButton
-            menu="configuracion"
-            icon={Settings}
-            label="Configuración"
-          />
-
         </div>
 
         {/* USUARIO */}

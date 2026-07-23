@@ -11,7 +11,8 @@ listarCalendarioService,
 listarSSOMAService,
 actualizarSSOMAService,
 obtenerConfiguracionService,
-actualizarConfiguracionService
+actualizarConfiguracionService,
+subirEvidenciaCapacitacionService
 } from "./rrhh.service";
 export const listarEmpleados =
 async(
@@ -342,5 +343,36 @@ message:"Error actualizando configuración"
 
 }
 
+
+};
+export const subirEvidenciaCapacitacionController = async (
+  req: Request,
+  res: Response
+) => {
+
+  try {
+
+    const id = Number(req.params.id);
+
+    const evidencia =
+      (req.file as any)?.path || null;
+
+    const capacitacion =
+      await subirEvidenciaCapacitacionService(
+        id,
+        evidencia
+      );
+
+    res.json(capacitacion);
+
+  } catch (error) {
+
+    console.log(error);
+
+    res.status(500).json({
+      message: "Error al subir evidencia"
+    });
+
+  }
 
 };

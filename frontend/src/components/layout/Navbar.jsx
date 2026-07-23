@@ -130,7 +130,7 @@ export default function Navbar() {
               {/* ADMIN BUTTON: Ahora es blanco con texto naranja para resaltar en el fondo oscuro */}
               <li>
                 <Link
-                  to="/administracion"
+                  to="/administracion/login"
                   className="bg-white hover:bg-gray-100 text-[#d96600] transition px-5 py-2.5 rounded-full flex items-center gap-2 shadow-lg font-black"
                 >
                   <LogIn size={16} />

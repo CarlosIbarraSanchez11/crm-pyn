@@ -14,13 +14,11 @@ listarCalendario,
 listarSSOMA,
 actualizarSSOMA,
 obtenerConfiguracion,
-actualizarConfiguracion
+actualizarConfiguracion,
+subirEvidenciaCapacitacionController
 } from "./rrhh.controller";
 
-
 const router = Router();
-
-
 
 router.get(
 "/empleados",
@@ -57,7 +55,11 @@ router.get(
 "/ssoma",
 listarSSOMA
 );
-
+router.put(
+    "/capacitaciones/:id/evidencia",
+    upload.single("evidencia"),
+    subirEvidenciaCapacitacionController
+);
 
 router.put(
 "/ssoma/:id",

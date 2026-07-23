@@ -40,7 +40,6 @@ duracion:"",
 institucion:"",
 estado:"Programada",
 descripcion:"",
-evidencia: null
 };
 
 function Campo({label,required,children}){
@@ -163,10 +162,6 @@ const guardar = async () => {
         form.empleados.forEach((id) => {
             formData.append("empleados", id);
         });
-
-        if (form.evidencia) {
-            formData.append("evidencia", form.evidencia);
-        }
 
         await onGuardar(formData);
 
@@ -483,104 +478,6 @@ onChange={e=>cambiar("descripcion",e.target.value)}
 
 </div>
 
-
-</div>
-<div className="mt-6 border-t pt-6">
-
-    <div className="mb-5 flex items-center gap-3">
-
-        <div
-            className="flex h-10 w-10 items-center justify-center rounded-xl"
-            style={{
-                backgroundColor: COLORS.navySoft,
-                color: COLORS.navy
-            }}
-        >
-            <FileText size={20} />
-        </div>
-
-        <div>
-            <h3 className="text-sm font-semibold text-slate-800">
-                Evidencia de asistencia
-            </h3>
-
-            <p className="text-xs text-slate-500">
-                Adjunte la lista de asistencia firmada o un documento que evidencie la capacitación.
-            </p>
-        </div>
-
-    </div>
-
-    <label
-        htmlFor="archivo"
-        className="
-            flex cursor-pointer flex-col items-center justify-center
-            rounded-2xl border-2 border-dashed border-slate-300
-            bg-slate-50 px-6 py-8 transition-all
-            hover:border-[rgb(243_146_0)]
-            hover:bg-orange-50
-        "
-    >
-
-        <UploadCloud
-            size={42}
-            color="rgb(243 146 0)"
-        />
-
-        <p className="mt-3 text-sm font-semibold text-slate-800">
-            Seleccionar archivo
-        </p>
-
-        <p className="mt-1 text-xs text-slate-500 text-center">
-            Solo se permite un archivo<br/>
-            PDF, JPG o PNG (máx. 10 MB)
-        </p>
-
-    </label>
-
-    <input
-        id="archivo"
-        type="file"
-        accept=".pdf,.jpg,.jpeg,.png"
-        className="hidden"
-        onChange={(e) =>
-            cambiar("evidencia", e.target.files?.[0] || null)
-        }
-    />
-
-    {form.evidencia && (
-
-        <div className="mt-4 flex items-center justify-between rounded-xl border border-green-200 bg-green-50 px-4 py-3">
-
-            <div className="flex items-center gap-3">
-
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-green-100">
-                    <Paperclip size={18} className="text-green-700" />
-                </div>
-
-                <div>
-                    <p className="text-sm font-semibold text-green-800">
-                        {form.evidencia.name}
-                    </p>
-
-                    <p className="text-xs text-green-600">
-                        Archivo listo para guardar
-                    </p>
-                </div>
-
-            </div>
-
-            <button
-                type="button"
-                onClick={() => cambiar("evidencia", null)}
-                className="rounded-lg px-3 py-1 text-sm font-medium text-red-600 transition hover:bg-red-100"
-            >
-                Quitar
-            </button>
-
-        </div>
-
-    )}
 
 </div>
 

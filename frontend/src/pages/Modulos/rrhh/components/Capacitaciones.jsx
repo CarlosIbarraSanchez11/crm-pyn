@@ -7,7 +7,9 @@ import empleadosData from "../../../../data/empleados";
 const COLORS = { navy:"rgb(23 37 76)", orange:"rgb(243 146 0)" };
 
 export default function Capacitaciones(){
-
+const [modalEvidencia, setModalEvidencia] = useState(false);
+const [capacitacionSeleccionada, setCapacitacionSeleccionada] = useState(null);
+const [archivo, setArchivo] = useState(null);
 const [modal,setModal]=useState(false);
 const [busqueda, setBusqueda] = useState("");
 const [estado, setEstado] = useState("");
@@ -55,34 +57,48 @@ obtenerCapacitaciones();
 },[]);
 const guardarCapacitacion = async (formData) => {
 
-    const data = new FormData();
-
-    data.append("nombre", formData.nombre);
-    data.append("fecha", formData.fecha);
-    data.append("hora", formData.hora);
-    data.append("duracion", formData.duracion);
-    data.append("institucion", formData.institucion);
-    data.append("estado", formData.estado);
-    data.append("descripcion", formData.descripcion);
-
-    formData.empleados.forEach(id => {
-        data.append("empleados", id);
-    });
-
-    if (formData.evidencia) {
-        data.append("evidencia", formData.evidencia);
-    }
-
     await api.post(
         "/rrhh/capacitaciones",
-        data
+        formData,
+        {
+            headers:{
+                "Content-Type":"multipart/form-data"
+            }
+        }
     );
 
-    // Volver a cargar la tabla
     await obtenerCapacitaciones();
 
-    // Cerrar modal
     setModal(false);
+
+};
+const guardarEvidencia = async () => {
+
+    if (!archivo) {
+        alert("Seleccione un archivo");
+        return;
+    }
+
+    const formData = new FormData();
+
+    formData.append("evidencia", archivo);
+
+    await api.put(
+        `/rrhh/capacitaciones/${capacitacionSeleccionada.id}/evidencia`,
+        formData,
+        {
+            headers:{
+                "Content-Type":"multipart/form-data"
+            }
+        }
+    );
+
+    await obtenerCapacitaciones();
+
+    setModalEvidencia(false);
+    setCapacitacionSeleccionada(null);
+    setArchivo(null);
+
 };
 return(
 <div className="p-6 bg-slate-50 min-h-screen">
@@ -331,21 +347,26 @@ year:"numeric"
             <Eye size={17}/>
         </button>
     <button
-      className="
-      h-9
-      w-9
-      rounded-lg
-      bg-orange-50
-      text-orange-600
-      flex
-      items-center
-      justify-center
-      hover:bg-orange-100
-      transition
-      "
-    >
-      <Edit size={17}/>
-    </button>
+  onClick={()=>{
+    setCapacitacionSeleccionada(cap);
+    setArchivo(null);
+    setModalEvidencia(true);
+  }}
+  className="
+  h-9
+  w-9
+  rounded-lg
+  bg-orange-50
+  text-orange-600
+  flex
+  items-center
+  justify-center
+  hover:bg-orange-100
+  transition
+  "
+>
+  <Edit size={17}/>
+</button>
 
     <button
       className="
@@ -455,6 +476,56 @@ modalDocumento && (
         </div>
 
     </div>
+
+</div>
+
+)
+}
+{
+modalEvidencia && (
+
+<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+
+<div className="bg-white rounded-2xl w-full max-w-lg p-6">
+
+<h2 className="text-xl font-bold mb-2">
+Subir evidencia
+</h2>
+
+<p className="text-sm text-slate-500 mb-5">
+{capacitacionSeleccionada?.nombre}
+</p>
+
+<input
+type="file"
+accept=".pdf,.jpg,.jpeg,.png"
+onChange={(e)=>setArchivo(e.target.files[0])}
+className="w-full border rounded-xl p-3"
+/>
+
+<div className="flex justify-end gap-3 mt-6">
+
+<button
+onClick={()=>{
+setModalEvidencia(false);
+setArchivo(null);
+}}
+className="border rounded-xl px-5 py-2"
+>
+Cancelar
+</button>
+
+<button
+onClick={guardarEvidencia}
+className="rounded-xl px-5 py-2 text-white"
+style={{backgroundColor:COLORS.orange}}
+>
+Guardar evidencia
+</button>
+
+</div>
+
+</div>
 
 </div>
 
